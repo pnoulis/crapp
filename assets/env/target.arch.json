@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "name": "",
+    "version": "",
+    "description": "",
+    "author": "",
+    "email": "",
+    "repository": "",
+    "homepage": "",
+    "license": ""
+  },
+  "targets": {
+    "arch": "",
+    "env": ""
+  },
+  "services": {},
+  "net": {}
+}
