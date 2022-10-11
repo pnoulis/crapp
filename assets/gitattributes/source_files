@@ -1,0 +1,57 @@
+-*- mode: Conf -*-
+# Windows
+# --------------------------------------------------
+*.ps1 text eol=crlf
+*.ps1x text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+*.ps1xml text eol=crlf
+*.pssc text eol=crlf
+*.psrc text eol=crlf
+*.cdxml text eol=crlf
+*.msh text eol=crlf
+*.msh1 text eol=crlf
+*.msh2 text eol=crlf
+*.mshxml text eol=crlf
+*.msh1xml text eol=crlf
+*.msh2xml text eol=crlf
+*.mcf text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Linux
+# --------------------------------------------------
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Javascript
+# --------------------------------------------------
+*.js text
+*.jsx text 
+*.cjs text
+*.mjs text
+*.ts text
+*.tsx text
+*.dot text
+*.ejs text
+*.erb text
+*.haml text
+*.handlebars text
+*.hbs text
+*.hbt text
+*.jade text
+*.latte text
+*.mustache text
+*.njk text
+*.phtml text
+*.svelte text
+*.tmpl text
+*.tpl text
+*.twig text
+*.vue text
+
+# Css
+# --------------------------------------------------
+*.css
+*.scss
+*.sass

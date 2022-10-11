@@ -1,0 +1,11 @@
+# emacs autosave files
+.#*
+
+# emacs undo tree files
+*.~undo-tree~
+
+# env
+.env*
+
+# node modules
+/node_modules

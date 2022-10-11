@@ -1,0 +1,41 @@
+-*- mode: Conf -*-
+# Documents
+# --------------------------------------------------
+*.bibtex text diff=bibtex
+*.doc diff=astextplain
+*.DOC diff=astextplain
+*.docx diff=astextplain
+*.DOCX diff=astextplain
+*.dot diff=astextplain
+*.DOT diff=astextplain
+*.pdf diff=astextplain
+*.PDF diff=astextplain
+*.rtf diff=astextplain
+*.RTF diff=astextplain
+*.md text diff=markdown
+*.mdx text diff=markdown
+*.org text diff=markdown
+*.tex text diff=tex
+*.adoc text
+*.textile text
+*.mustache text
+*.csv text
+*.tab text
+*.tsv text
+*.txt text
+*.sql text
+*.epub diff=astextplain
+AUTHORS text
+CHANGELOG text
+CHANGES text
+CONTRIBUTING text
+COPYING text
+copyright text
+*COPYRIGHT* text
+INSTALL text
+license text
+LICENSE text
+NEWS text
+readme text
+*README* text
+TODO text

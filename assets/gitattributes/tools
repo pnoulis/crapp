@@ -1,0 +1,30 @@
+-*- mode: Conf -*-
+# Docker
+# --------------------------------------------------
+Dockerfile text
+*.Dockerfile text
+
+# Make
+# --------------------------------------------------
+Makefile text
+GNUMakefile text
+*.Makefile text
+
+# Git
+# --------------------------------------------------
+.gitattributes text
+.gitignore text
+
+# rc
+# --------------------------------------------------
+*.*rc text
+
+# Ignore
+# --------------------------------------------------
+*.*ignore text
+
+# npm
+# --------------------------------------------------
+package.json text eol=lf
+package-lock.json text eol=lf -diff
+pnpm-lock.yaml text eol=lf -diff
