@@ -1,141 +1,174 @@
+# -*- mode: Shell-script -*-
 #!/bin/bash
-# Options
+
+# Flags
 # --------------------------------------------------
-declare -g _APP_NAME=
-declare -g _APP_LANG=
+declare -g DEV
 
-scriptdir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-projdir="$(dirname "$scriptdir")"
-posargs=()
+# Parameters
+# --------------------------------------------------
+declare -g crapp_type crapp_path app_name app_path
 
-main () {
-    cd "$projdir"
-    while [ $# -gt 0 ]; do
-        case "$1" in
-            --app-lang | -l )
-                _APP_LANG="$2"
-                shift
-                shift
-                ;;
-            --app-name )
-                _APP_NAME="$2"
-                shift
-                shift
-                ;;
-            -* | --* )
-                stateError -u "Unknown option $1"
-                ;;
-            *)
-                posargs+=("$1")
-                shift
-                ;;
-        esac
-    done
-    set -- "${posargs[@]}"
-    parsePath "$1"
-    askInfo
+# Constants
+# --------------------------------------------------
+declare -gr SCRIPTDIR="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
+declare -gr PROJDIR="$(dirname "$SCRIPTDIR")"
+
+# Imports
+# --------------------------------------------------
+source "${PROJDIR}/src/utils.sh"
+source "${PROJDIR}/src/cli.sh"
+
+# Program Start
+# --------------------------------------------------
+main() {
+    cd $PROJDIR &>/dev/null
+    parse_clargs "$@"
 }
 
-stateError () {
-    local usage=
-    local message=
-    local quit=1
-    while getopts ":uQ" o; do
-        case $o in
-            u ) #usage
-                usage=1
-                ;;
-            Q ) # do not exit
-                quit=
-                ;;
-            * )
-                "stateError: Unrecognized option"
-                exit 1
-        esac
-    done
-    shift $((OPTIND -1))
-    message="$1"
-    if [ -n "${message}" ]; then printf "%s\n" "$0: $message"; fi >&2
-    if [ -n "${usage}" ]; then usage; fi
-    if [ -n "${quit}" ]; then exit 1; fi
-    return 0
+dev() {
+    printf "%s\n" "dev"
 }
 
-# params
-# { string } [REQUIRED] $1, app path
-parsePath () {
-    if [ -z "$1" ]; then stateError "Missing installation path"; fi
-    local _APP_PATH="$(realpath "$1")"
+if [ -n "$DEV" ]; then
+    dev "$@";
+else
+    main "$@";
+fi
+# declare -g crapp_type, \
+#         crapp_path, \
+#         app_name, \
+#         app_path
 
-    if [ -n "$_APP_NAME" ]; then
-        if [ ! -d "${_APP_PATH}" ]; then stateError "'${_APP_PATH}': dirname oes not exist!"; fi
-        _APP_PATH="${_APP_PATH%/}/${_APP_NAME}"
-    else
-        if [ -d "$_APP_PATH" ]; then stateError "'${_APP_PATH}': already exists!"; fi
-        if [ ! -d "${_APP_PATH%/*}" ]; then stateError "'${_APP_PATH}': dirname does not exist!"; fi
-    fi
+# posargs=()
 
-    _APP_NAME="$(basename "$_APP_PATH")"
-    echo path: ${_APP_PATH} appname: ${_APP_NAME}
-}
-askInfo () {
-    askAppName "$_APP_NAME"
-    askAppLang "$_APP_LANG"
-}
+# dev () {
+#     askCrappType
+# }
+# main () {
+#     while [ $# -gt 0 ]; do
+#         case "$1" in
+#             --crapp-type | -t )
+#                 _APP_LANG="$2"
+#                 shift
+#                 shift
+#                 ;;
+#             --app-name )
+#                 _APP_NAME="$2"
+#                 shift
+#                 shift
+#                 ;;
+#             -* | --* )
+#                 stateError -u "Unknown option $1"
+#                 ;;
+#             * )
+#                 posargs+=("$1")
+#                 shift
+#                 ;;
+#         esac
+#     done
+#     set -- "${posargs[@]}"
+#     parseTargetPath "$1"
+#     askInfo
+# }
 
-# params
-# { string } [Optional] $1, app name
-askAppName () {
-    local answer=
-    local illegal=
-    while true; do
-        if [ -n "$1" ]; then
-            answer="$1"
-            shift
-        else
-            read -r -p 'App name: ' answer
-        fi
-        case "$answer" in
-            [^a-zA-Z]* | *[^a-zA-Z0-9_-]* )
-                stateError -Q "Unaccepted app name: ${answer}"
-                ;;
-            *)
-                _APP_NAME="$answer";
-                break
-                ;;
-        esac
-    done
-}
+# stateError () {
+#     local usage=
+#     local message=
+#     local quit=1
+#     while getopts ":uQ" o; do
+#         case $o in
+#             u ) #usage
+#                 usage=1
+#                 ;;
+#             Q ) # do not exit
+#                 quit=
+#                 ;;
+#             * )
+#                 "stateError: Unrecognized option"
+#                 exit 1
+#         esac
+#     done
+#     shift $((OPTIND -1))
+#     message="$1"
+#     if [ -n "${message}" ]; then printf "%s\n" "$message"; fi >&2
+#     if [ -n "${usage}" ]; then usage; fi
+#     if [ -n "${quit}" ]; then exit 1; fi
+#     return 0
+# }
 
-# params
-# { string } [Optional] $1, app language
-askAppLang () {
-    local answer=
-    while true; do
-        if [[ -n "$1" ]]; then
-            answer="$1"
-            shift
-        else
-            read -r -p 'App language: ' answer
-        fi
-        case "$answer" in
-            node )
-                _APP_LANG="node"
-                break
-                ;;
-            react )
-                _APP_LANG="react"
-                break
-                ;;
-            delphi )
-                _APP_LANG="delphi"
-                break
-                ;;
-            * )
-                stateError -Q "Unsupported application language: ${answer}"
-                ;;
-        esac
-    done
-}
+# # params
+# # { string } [REQUIRED] $1, app path
+# parseTargetPath () {
+#     if [ -z "$1" ]; then stateError "Missing installation path"; fi
+#     app_path="$(realpath "$1")"
 
-main "$@"
+#     if [ -n "$app_name" ]; then
+#         if [ ! -d "${app_path}" ]; then stateError "'${app_path}': dirname does not exist!"; fi
+#         app_path="${app_path%/}/${app_name}"
+#     else
+#         if [ -d "$app_path" ]; then stateError "'${app_path}': already exists!"; fi
+#         if [ ! -d "${app_path%/*}" ]; then stateError "'${app_path}': dirname does not exist!"; fi
+#     fi
+
+#     app_name="$(basename "$app_path")"
+#     echo path: ${app_path} appname: ${app_name}
+# }
+
+# askInfo () {
+#     askAppName "$_APP_NAME"
+#     askCrappType "$_APP_LANG"
+# }
+
+# # params
+# # { string } [Optional] $1, app name
+# askAppName () {
+#     while true; do
+#         if [ -n "$1" ]; then
+#             app_name="$1"
+#             shift
+#         else
+#             read -r -p 'App name: ' app_name
+#         fi
+#         case "$app_name" in
+#             [^a-zA-Z]* | *[^a-zA-Z0-9_-]* )
+#                 stateError -Q "Illegal app name: $app_name"
+#                 ;;
+#             *)
+#                 _APP_NAME="$app_name";
+#                 break
+#                 ;;
+#         esac
+#     done
+# }
+
+# # params
+# # { string } [Optional] $1, app language
+# askCrappType () {
+#     local -a available_targets
+#     declare -g crapp_type
+
+#     read available_targets <<<$(findCrappTargets)
+#     if [ -n "$1" ]; then
+#         local i
+#         for i in "${available_targets[@]}"; do
+#             [[ "$1" == "$i" ]] && crapp_type="$i"
+#         done
+#         [ -z $crapp_type ] && stateError "Unrecognized app type: $1"
+#     else
+#         PS3="Select app type to create: "
+#         select crapp_type in "${available_targets[@]}"
+#         do
+#             [ -n "$crapp_type" ] && break;
+#         done
+#     fi
+#     exit 0;
+# }
+
+# findCrappTargets () {
+#     find "${projdir}/src" -mindepth 1 -maxdepth 1 -type d -printf "%f\n"
+# }
+
+
+# dev "$@"
+# # main "$@"

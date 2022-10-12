@@ -1,0 +1,19 @@
+# -*- mode: Shell-script -*-
+#!/bin/bash
+
+declare -gr SCRIPTDIR="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
+declare -gr PROJDIR="$SCRIPTDIR"
+cd "$PROJDIR" &>/dev/null
+
+# Hoisting for readability purposes
+main () {
+    alias crapp="$(realpath "${PROJDIR}/src/crapp.sh")"
+    alias crapp
+}
+
+# Utils
+# --------------------------------------------------
+
+# Program start
+# --------------------------------------------------
+main

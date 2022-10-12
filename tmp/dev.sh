@@ -1,3 +1,7 @@
-param="/one/two/three"
+#!/bin/bash
 
-echo ${param%/}
+func () {
+    local one="toehu", two
+    echo $one $two
+}
+func

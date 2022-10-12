@@ -1,0 +1,38 @@
+* About
+Crapp's intended goal is to ease the software devolpment process by producing a
+directory tree formatted with tools that hopefully will standardize and drive a
+simple development process.
+
+Such an endeavor is extremely difficult. Why?
+Because the development process itself is not standard. Each application and
+organization producing an application have different development needs.
+
+One person embarking on a personal project with the stated goal of installing
+the program to his system for personal use would be content with the following
+development process:
+
+1. Write code
+2. compile code
+3. execute
+4. repeat
+5. when done install program at ~/bin
+6. Add ~/bin to $PATH if not already there
+
+\* One must keep in mind that the above devop is very high level and does
+not address questions such as:
+
+1. Which text editor is being used
+2. How does one go debugging the program?
+3. What about versioning?
+4. What about dependencies?
+
+A team developing a website has different needs. One devop approach that might
+suit their re
+
+As such navigating across this overly-saturated environment one must discern
+patterns out of the myriad of tools and methodologies.
+* Glossary
+** crapp_type
+** crapp_path
+** app_name
+** app_path
