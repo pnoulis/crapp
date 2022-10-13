@@ -8,7 +8,7 @@ set -eu
 
 # Flags
 # --------------------------------------------------
-declare DEV VERBOSE SILENT
+declare DEV VERBOSE
 
 # Parameters
 # --------------------------------------------------
@@ -61,11 +61,17 @@ main() {
 
 # @param {Array<string>} $0..$n - command line arguments
 parse_args() {
+    declare -g OPTARG=
+
     while (( $# > 0 )); do
         case "$1" in
-            --te=* | --te)
+            --example-param* | -example-param* | -e*)
                 parse_param "$@"
-                shift
+                EXAMPLE_PARAM="${OPTARG-}"
+                ;;
+            --example-optional* | -example-optional* | -E*)
+                OPTIONAL=0 parse_param "$@"
+                EXAMPLE_OPTIONAL="${OPTARG:-optional value}"
                 ;;
             --dev | -d)
                 DEV=1
@@ -73,8 +79,6 @@ parse_args() {
                 break
                 ;;
             --silent | --quiet | -S)
-                SILENT=1
-                readonly SILENT
                 exec 1&>/dev/null
                 ;;
             --verbose | -v)
@@ -82,60 +86,64 @@ parse_args() {
                 readonly VERBOSE
                 ;;
             --version | -V)
+                echo "version"
                 ;;
             --help | -help | --h | -h)
                 usage
                 exit 0
                 ;;
-            --)
-                break
+            -[a-zA-Z][a-zA-Z]*)
+                local i="$1"
+                shift
+                for i in $(grep -o '[a-zA-Z]' <<<"$i"); do
+                    set -- "-$i" "$@"
+                done
+                continue
                 ;;
-            -?* | --?*)
+            -[a-z]*)
+                warn -u "Unknown option $1"
+                exit 1
+                ;;
+            --[a-zA-Z]*)
                 warn -u "Unkown option $1"
                 exit 1
                 ;;
+            --) shift; break ;;
             *)
-                posargs+=("$1")
-                shift
+                echo "no match: $1"
+                break
                 ;;
         esac
+        shift
     done
+    unset OPTARG
+    echo "$@"
 }
 
-# @paramr {Array<string>} $1..$n - command line arguments
+##
+# Support equal and space delimited paramaters
+# Support optional arguments
+# Example: [param=value | param="value" | param value | param "value" | param]
+#
+# @param {Array<string>} $1..$n - command line arguments
+##
 parse_param() {
-    local param arg
+    local param
 
-    # support paramater format: param=value | param="value"
-    case "$1" in
-        *=*)
-            param="${1%%=*}"
-            arg="${1#*=}"
-            if [ ! "$arg" ] && [ -z "$OPTIONAL" ]; then
-                error -u "${param} requires an argument"
-                exit 1
-            fi
-            echo "$arg"
-            return 0
-            ;;
-        *)
-            param="$1"
-            shift # next case shall check 2nd parameter format
-            ;;
-    esac
+    if [[ "$1" =~ .*=.* ]]; then # equal delimited parameter
+        param="${1%%=*}"
+        OPTARG="${1#*=}"
+    elif [[ "${2-}" =~ ^[^-].+ ]]; then # space delimited parameter
+        param="$1"
+        OPTARG="$2"
+        shift
+    fi
 
-    # support paramater format: param value | param "value"
-    case "$1" in
-        [^-]*)
-            arg="$1"
-            shift
-            ;;
-        *)
-            if [ -n "$OPTIONAL" ]; then
-                arg="$"
-            fi
-    esac
-
+    if [ ! "${OPTARG-}" ] && [ ! "${OPTIONAL-}" ]; then
+        error -u "${param-$1} requires an argument"
+        exit 1
+    fi
+    return 0
 }
 
 # @param {string} $1 - error message
@@ -156,10 +164,6 @@ staterr() {
             -u) # usage
                 USAGE=1
                 shift
-                ;;
-            -*)
-                fatal "staterr: Unknown option '$1'"
-                exit 1
                 ;;
             *)
                 posargs+=("$1")

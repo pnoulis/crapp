@@ -1,5 +1,8 @@
 #!/bin/bash
 
-name="pavlos"
+echo "${@:2}"
 
-printf "%s" "${name}"
+v="onetwothree"
+
+
+grep -Po "[a-zA-Z]"<<<"$v"
