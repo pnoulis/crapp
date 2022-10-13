@@ -1,7 +1,5 @@
 #!/bin/bash
 
-func () {
-    local one="toehu", two
-    echo $one $two
-}
-func
+name="pavlos"
+
+printf "%s" "${name}"

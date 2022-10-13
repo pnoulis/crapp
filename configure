@@ -1,4 +1,4 @@
-# -*- mode: Shell-script -*-
+# -*- mode: shell-script -*-
 #!/bin/bash
 
 declare -gr SCRIPTDIR="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
@@ -7,7 +7,7 @@ cd "$PROJDIR" &>/dev/null
 
 # Hoisting for readability purposes
 main () {
-    alias crapp="$(realpath "${PROJDIR}/src/crapp.sh")"
+    alias crapp="$(realpath "${PROJDIR}/src/crapp.bash")"
     alias crapp
 }
 
