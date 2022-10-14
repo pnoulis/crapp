@@ -104,6 +104,7 @@ parse_param() {
         echo 1 >$SHIFTER
     fi
 
+    # Support optional parameter arguments
     if [ ! "${arg-}" ] && [ ! "${OPTIONAL-}" ]; then
         echo "${param-$1} requires an argument"
         exit 1
