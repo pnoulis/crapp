@@ -134,6 +134,7 @@ parse_param() {
         param="${1%%=*}"
         OPTARG="${1#*=}"
     elif [[ "${2-}" =~ ^[^-].+ ]]; then # space delimited parameter
+        echo "space delimited"
         param="$1"
         OPTARG="$2"
         shift
