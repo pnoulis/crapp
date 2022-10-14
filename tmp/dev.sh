@@ -1,20 +1,23 @@
 #!/bin/bash
 
 set -eu
-declare -g PARAM OPT FLAG
-declare -g ARGS
+
+declare -g PARAM OPT FLAG DEBUG
+declare -ga ARGS
 ARGS=()
 PARAM=
 OPT=
 FLAG=
+DEBUG=
 
 main() {
     parse_args "$@"
-    echo "\$PARAM: ${PARAM}"
-    echo "\$OPT: ${OPT}"
-    echo "\$FLAG: ${FLAG}"
-    echo "\$ARGS: ${ARGS[@]:-}"
+    # echo "\$PARAM: ${PARAM}"
+    # echo "\$OPT: ${OPT}"
+    # echo "\$FLAG: ${FLAG}"
+    # echo "\$ARGS: ${ARGS[@]:-}"
 }
+
 parse_args() {
     declare -g SHIFTER
     SHIFTER=$(mktemp)
@@ -48,11 +51,16 @@ parse_args() {
                 FLAG=0
                 ;;
 
+            # Debug
+            --debug | -d)
+                DEBUG=0
+                ;;
+
             # Short option combinations
             -[a-zA-Z][a-zA-Z]*)
                 local i="$1"
                 shift
-                for i in "$(grep -o '[a-zA-Z]' <<<"$1")"; do
+                for i in "$(echo "$1" | grep -o '[a-zA-Z]')"; do
                     set -- "-$i" "$@"
                 done
                 continue
@@ -65,8 +73,8 @@ parse_args() {
                 break
                 ;;
 
-            # Custom Error handling
             # Capture unrecognized options
+            # Custom Error handling
             -[a-zA-Z]* | --[a-zA-Z]*)
                 echo "error"
                 exit 1
@@ -104,7 +112,7 @@ parse_param() {
         echo 1 >$SHIFTER
     fi
 
-    # Support optional parameter arguments
+    # Optional parameter arguments
     if [ ! "${arg-}" ] && [ ! "${OPTIONAL-}" ]; then
         echo "${param-$1} requires an argument"
         exit 1
