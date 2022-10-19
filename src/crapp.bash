@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# e: exit on error
+# u: treat unset variables and parameters as errors
+# a: export variables in child processes
 set -eu
 
 # Flags
@@ -88,8 +91,19 @@ main() {
 
     [ "${DEBUG-}" ] && debug
 
-    cd $crapp_path
-    make
+    {
+        # out of tree build
+        buildir=$(mktemp -d)
+        cd $crapp_path
+
+        ./configure --buildir="${buildir}" \
+                    --srcdir="${crapp_path}" \
+                    --projname="${app_name}" \
+                    --prefix="${app_path}"
+
+        make && make install
+        rm $buildir
+    }
 }
 
 # @param {Array<string>} $0..$n - command line arguments
@@ -102,6 +116,9 @@ parse_args() {
             --list | --ls | -l)
                 LIST=0
             ;;
+            --create-target*)
+                echo "create-target"
+                ;;
             --crapp-target* | -t*)
                 crapp_tag="$(parse_param "$@")"
                 crapp_target="${crapp_tag##*:}"
