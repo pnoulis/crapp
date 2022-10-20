@@ -2,12 +2,12 @@
 #!/bin/bash
 
 declare -gr SCRIPTDIR="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
-declare -gr PROJDIR="$SCRIPTDIR"
-cd "$PROJDIR" &>/dev/null
+declare -gr srcdir="$SCRIPTDIR"
+cd "${srcdir}" &>/dev/null
 
 # Hoisting for readability purposes
 main () {
-    alias crapp="$(realpath "${PROJDIR}/src/crapp.bash")"
+    alias crapp="$(realpath "${srcdir}/src/crapp.bash")"
     alias crapp
 }
 

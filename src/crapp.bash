@@ -7,9 +7,10 @@ set -eu
 
 # Flags
 # --------------------------------------------------
-declare -g LIST DEBUG
+declare -g LIST DEBUG DEV
 LIST=
 DEBUG=
+DEV=
 
 
 # Parameters
@@ -86,23 +87,30 @@ main() {
         exit 0
     fi
 
+    [ "${DEV-}" ] && {
+        crapp_tag='bash'
+        crapp_target='simple'
+        crapp_path="${PROJDIR}/src/tags/bash/targets/simple"
+        app_name="crapp_dev"
+        app_path=~/tmp
+    }
     parse_path
     askInfo
 
     [ "${DEBUG-}" ] && debug
 
     {
-        # out of tree build
-        buildir=$(mktemp -d)
+        echo --------------------------------------------------
+        set -a
         cd $crapp_path
 
-        ./configure --buildir="${buildir}" \
-                    --srcdir="${crapp_path}" \
-                    --projname="${app_name}" \
-                    --prefix="${app_path}"
-
+        # out of tree build
+        BUILDIR=$(mktemp -dp /tmp "XXXX.${crapp_target}.crapp")
+        SRCDIR="${crapp_path}"
+        APPNAME="${app_name}"
+        PREFIX="${app_path}"
         make && make install
-        rm $buildir
+        rm -drf $BUILDIR
     }
 }
 
@@ -141,6 +149,9 @@ parse_args() {
                 ;;
             --debug | -d)
                 DEBUG=0
+                ;;
+            --dev | -D)
+                DEV=0
                 ;;
             -[a-zA-Z][a-zA-Z]*)
                 local i="$1"
