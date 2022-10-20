@@ -109,6 +109,7 @@ main() {
         SRCDIR="${crapp_path}"
         APPNAME="${app_name}"
         PREFIX="${app_path}"
+        CRAPP_ASSETS="${PROJDIR}/assets"
         make && make install
         rm -drf $BUILDIR
     }

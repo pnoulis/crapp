@@ -1,0 +1,23 @@
+# Listed in order of highest significance
+# Posix shell
+# Bash
+# Bourne shell
+# Z shell
+# Fish shell
+# C shell
+# Almquist shell
+# Tee shell
+# Korn shell
+*.sh text eol=lf
+# Born Again Bourne Shell
+*.bash text eol=lf
+# Corn Shell
+*.csh text eol=lf
+# Korn shell
+*.ksh text eol=lf
+# Tee shell
+*.tcsh text eol=lf
+# Almquist shell
+*.ash text eol=lf
+# Z shell
+*.zsh text eol=lf

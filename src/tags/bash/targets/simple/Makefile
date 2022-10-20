@@ -7,40 +7,49 @@ APPNAME ?= 'random'
 MKDIR := mkdir -p
 CP := cp -r
 
-dirs := src doc config tests tmp/dev.bash
-utilfiles := .gitignore .gitattributes .editorconfig \
-Makefile configure README.md
-
+dirs := src docs config tests tmp
 dirtree := $(addprefix $(BUILDIR)/, $(dirs))
-utilfiles := $(addprefix $(BUILDIR)/, $(utilfiles))
+utilities := makefile configure readme gitignore \
+gitattributes editorconfig
 
 .PHONY: all build install
 .DEFAULT_GOAL: all
 
 all: build
 
-build: $(utilfiles) | $(dirtree)
+build: $(utilities) initvc | $(dirtree)
 	@echo 'target: build'
-
-$(gitignore):
-	@echo 'ignore_something/*' > $(gitignore)
-
-$(makefile):
-
-$(configure):
-	@echo 'configure something' > $(configure)
-
-$(readme):
-	@echo 'read something' > $(readme)
-
-$(utilfiles):
-	@touch $(utilfiles)
-
-$(dirtree):
-	@$(MKDIR) $(dirtree)
 
 install:
 	@$(MKDIR) $(PREFIX) &>/dev/null
 	@$(CP) $(BUILDIR)/. $(PREFIX)/
-	@cd $(PREFIX)/.. && \
-	find . -mindepth 1 -path "*$(APPNAME)*" | xargs -I {} realpath {} \
+	@echo $(PREFIX)/
+	@find $(PREFIX)/ -mindepth 1
+
+initvc:
+	@echo initialize git repository
+
+makefile:
+	@awk '\
+	{ print $$0 } \
+	' $(SRCDIR)/templates/Makefile > $(BUILDIR)/Makefile
+
+configure:
+	@echo 'configure something' > $(BUILDIR)/configure
+
+gitignore:
+	@cat $(CRAPP_ASSETS)/gitignore/emacs > $(BUILDIR)/.gitignore
+	@cat $(CRAPP_ASSETS)/gitignore/common_transients >> $(BUILDIR)/.gitignore
+
+gitattributes:
+	@cat $(CRAPP_ASSETS)/gitattributes/common.shell.linux > $(BUILDIR)/.gitattributes
+
+editorconfig:
+	@echo -e 'root = true\n' > $(BUILDIR)/.editorconfig
+	@cat $(CRAPP_ASSETS)/editorconfig/base.linux >> $(BUILDIR)/.editorconfig
+
+readme:
+	@echo 'read something' > $(BUILDIR)/.README.md
+
+$(dirtree):
+	@$(MKDIR) $(dirtree)

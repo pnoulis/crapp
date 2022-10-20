@@ -1,0 +1,5 @@
+# Emacs automatically generated files
+# autosave
+.#*
+# undo tree
+*.~undo-tree~

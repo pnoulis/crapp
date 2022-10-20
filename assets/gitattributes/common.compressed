@@ -1,0 +1,21 @@
+# 7-Zip
+*.7z
+# GNU Zipped Archive
+*.gz
+# Tape Archive
+*.tar
+# Gzipped Tarball
+*.tar.gz
+*.tgz
+# Bzipped Tarball
+*.tb2
+*.tbz
+*.tbz2
+*.tz2
+*.tlz
+# Xzed tarball
+*.txz
+# Compressed tarball
+*.tZ
+*.taZ
+
