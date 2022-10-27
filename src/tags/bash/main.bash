@@ -68,7 +68,7 @@ parse_args() {
             --flag | -flag | -f)
                 FLAG=0
                 ;;
-            --help | | -help | --h | -h)
+            --help | -help | --h | -h)
                 usage
                 exit 1
                 ;;
