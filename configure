@@ -25,8 +25,11 @@ co_srcdir=.
 ###     https://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html
 ### *XDG* Base Directory Specification:
 ###     https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+### *Debian*
+###     https://www.debian.org/doc/debian-policy/ch-opersys.html
 declare -g co_prefix \
     co_exec_prefix \
+    co_libexecdir \
     co_localstatedir \
     co_datarootdir \
     co_sysconfdir \
@@ -40,7 +43,10 @@ declare -g co_prefix \
     co_docdir \
     co_infodir \
     co_lispdir \
-    co_mandir
+    co_mandir \
+    co_desktopdir
+
+# as in /usr/share/applications
 
 ## Build configuration targets
 ## --------------------------------------------------
@@ -81,6 +87,29 @@ main() {
     set_installdirs
     set_build_targets
     set_env
+}
+
+set_system() {
+    build_arch=
+    build_os
+    host_arch=
+    host_os=
+    target_arch=
+    target_os=
+
+    # The os-architecture that is performing the *build* is the same
+    # for which the compiled binary has been designed to *run* on which in turn
+    # produces binaries (in case of the binary being a compiler) for the same os-arch
+    # the binary was build on and for.
+    #
+    # As an example:
+    # Let our source code define a compiler named MY_GCC
+    # Let *build-arch* be the instruction-set of the compiler which we shall use to build MY_GCC
+    # Let *host-arch* be the instruction-set MY_GCC was compiled to use or run on.
+    # Let *target-os* be the instruction set that the binaries produced by MY_CCC shall run on.
+    # 
+    # Considering the defined terms:
+    # A native compilation occurs when -> *target-arch* = *host-arch* = *build-arch*
 }
 
 set_env() {
@@ -135,36 +164,110 @@ set_userdirs() {
 }
 
 set_installdirs() {
-    # Default root directories
-    # prefix: /usr/local
-    # exec_prefix: ${prefix}
-    # localstatedir: /var
-    # runstatedir: /run
-    # datarootdir: ${prefix}/share
-    # mandir: ${datarootdir}/man
+    case "${INSTALL_PRESET:-}" in
+        vendor)
+        # Prefixes
+        co_prefix=/usr
+        co_execprefix=${co_prefix}
+        co_datarootdir=${co_prefix}/share
 
-    # Executables
-    Vendor: /usr/bin
-    Admin: /usr/local/bin
-    Optional: /opt/$package/bin
+        co_localstateroot=/var
+        co_runstateroot=/run
 
-    case "${INSTALL_PRESET}" in
-        'vendor') 
-        co_bindir='/usr/bin'
+        co_localstatedir=/var
+        co_runstatedir=/run
+
+        co_sys_statedir=/var
+        co_sys_rundir=/run
+        co_sys_confdir=/etc
+        co_sys_datarootdir=/usr/share
+        co_sys_datadir=/usr/share/${package} || /usr/lib/${package}
+        co_sys_includedir=/usr/include/
+        co_sys_libdir=
+
+        co_usr_statedir=
+        co_usr_rundir=
+        co_usr_confdir=
+        co_usr_datarootdir=
+        co_usr_datadir=
+
+
+        # Executables
+        co_bindir=/usr/bin
+        co_sbindir=/usr/sbin
+
+        # Configuration
+        co_sysconfdir=/etc
+        co_user_confdir=$HOME/.config/${co_package}
+
+        # Documentation
+        co_mandir=${co_datarootdir}/man
+        co_infodir=${co_datarootdir}/info
+        co_docdir=${co_datarootdir}/doc/${co_package}
+        co_htmldir=${co_docdir}/html
+        co_pdfdir=${co_docdir}/pdf
+
+        # Static data
+        co_datadir=${co_datarootdir}/${co_package}
+        co_libdir=${prefix}/lib/${co_package}
+        co_includedir=${prefix}/include/${co_package}
+
+        # Variable persistent data
+        co_local_statedir=${co_localstateroot}/lib/${co_package}
+        co_local_spooldir=${co_localstateroot}/spool/${co_package}
+        co_local_logdir=${co_localstateroot}/log/${co_package}
+        co_local_cachedir=${co_localstateroot}/cache/${co_package}
+        co_local_tmpdir=${TMPDIR:-${co_localstateroot/tmp}}
+
+        # Variable volatile data
+        co_run_statedir=${co_runstateroot}/${co_package}
+        co_run_logdir=${co_runstateroot}/log/${co_package}
+        co_run_lockdir=${co_runstateroot}/lock
+        co_run_tmpdir=/tmp
+
         ;;
-        'admin') 
-        co_bindir='/usr/local/bin'
+        admin)
+        co_bindir=/usr/local/bin
+        # Prefixes
+        co_prefix=
+        co_execprefix=
+
+        # Executables
+        co_bindir=
+        co_sbindir=
+
+        # Documentation
+        co_mandir=
+        co_infodir=
+        co_docdir=
+        co_htmldir=
+        co_pdfdir=
+
+        # Static data
+        co_datadir=
+        co_libdir=
+        co_includedir=
+
+        # Variable persistent data
+        co_localstatedir=
+        co_spooldir=
+        co_logdir=
+        co_cachedir=
+
+        # Variable volatile data
+        co_runstatedir=
+        co_tmpdir=
         ;;
-        'optional') 
-        co_bindir="/opt/${package}/bin"
+        optional)
+        co_bindir=/opt/${package}/bin
         ;;
-        'home-xdg')  
+        user)
         co_bindir=${HOME}/.local/bin
         ;;
-        'home') 
+        home
         co_bindir=${HOME}/bin
         ;;
-        *) 
+        *)
         co_bindir=${prefix}/bin
         ;;
     esac
@@ -181,9 +284,9 @@ set_installdirs() {
     Admin: /etc/local/$package
     Optional: /etc/opt/$package
 
-    if prefix = '/usr' then 
+    if prefix = '/usr' then
         SYSCONFDIR=/etc
-    if prefix = '/usr/local' then 
+    if prefix = '/usr/local' then
         SYSCONFDIR=/etc/local/${package}
         or
         SYSCONFDIR=/usr/local/etc/${package}
