@@ -30,6 +30,8 @@ main() {
         init_vite
     fi
 
+    init_vitest
+    gen_vite_config
     merge_package_json
     gen_editorconfig
     gen_prettier
@@ -38,15 +40,17 @@ main() {
     gen_readme
     gen_makefile
     gen_eslint
-    mkdir -p docs tests src scripts assets
+    mkdir -p docs tests src scripts assets var/log tmp
     rm -rdf src/*
     gen_gitignore
     gen_gitattributes
     touch .env \
           .env.local \
           .env.development \
+          .env.staging \
           .env.production \
           .env.development.local \
+          .env.staging.local \
           .env.production.local \
           docs/dev.org \
           tests/.gitkeep \
@@ -61,7 +65,40 @@ main() {
     init_git
 }
 
+init_vitest() {
+    npm install --save-dev vitest
+}
+gen_vite_config() {
+    
+    cat <<EOF
+/// <reference types="vitest" />
+import { defineConfig } from "vite";
+import { configDefaults } from "vitest/config";
+import react from "@vitejs/plugin-react";
 
+const showEnv = () => ({
+  name: "log-config",
+  configResolved(resolvedConfig) {
+    console.log(resolvedConfig.env);
+  },
+});
+
+// https:vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), showEnv()],
+  build: {
+    outDir: "build",
+  },
+  test: {
+    // ...
+    include: [
+      ...configDefaults.include,
+      "tests.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
+    ],
+  },
+});
+EOF
+}
 init_git() {
     git init
     git add .
@@ -211,7 +248,10 @@ gen_makefile() {
 # Make and Shell behavior
 SHELL = /usr/bin/bash
 .DELETE_ON_ERROR:
-.DEFAULT_GOAL = run
+.DEFAULT_GOAL = all
+
+# Critical Paths
+LOGDIR=var/log
 
 # Programs
 INSTALL = /usr/bin/install
@@ -219,20 +259,58 @@ MKDIRP = /usr/bin/mkdir -p
 CP = /usr/bin/cp
 RM = /usr/bin/rm
 CHMOD = /usr/bin/chmod
-BUILD_SYS = npm exec vite
-LINTER = eslint
-FORMATER = prettier
+BUILD_SYS = npx vite
+LINTER = npx eslint
+FORMATER = npx prettier
+VITEST = npx vitest
 
 .PHONY: all
 all: run
 
 .PHONY: run
-run:
-${TAB}\$(BUILD_SYS) serve
+run: dirs
+${TAB}NODE_ENV=development \$(BUILD_SYS) serve \\
+${TAB}--mode development \$(params)
+
+.PHONY: run-staging
+run-stage: dirs
+${TAB}NODE_ENV=development \$(BUILD_SYS) serve \\
+${TAB}--mode staging \$(params)
+
+.PHONY: run-prod
+run-prod: dirs
+${TAB}NODE_ENV=development \$(BUILD_SYS) serve \\
+${TAB}--mode production \$(params)
 
 .PHONY: build
 build:
-${TAB}\$(BUILD_SYS) build
+${TAB}NODE_ENV=production \$(BUILD_SYS) build \\
+${TAB}--mode development \$(params)
+
+.PHONY: build-staging
+build-staging:
+${TAB}NODE_ENV=production \$(BUILD_SYS) build \\
+${TAB}--mode staging \$(params)
+
+.PHONY: build-prod
+build-prod:
+${TAB}NODE_ENV=production \$(BUILD_SYS) build \\
+${TAB}--mode production \$(params)
+
+.PHONY: test
+test:
+${TAB}NODE_ENV=development \$(VITEST) run \\
+${TAB}--reporter verbose --mode development \$(params)
+
+.PHONY: test-staging
+test-staging:
+${TAB}NODE_ENV=development \$(VITEST) run \\
+${TAB}--reporter verbose --mode staging \$(params)
+
+.PHONY: test-prod
+test-prod:
+${TAB}NODE_ENV=development \$(VITEST) run \\
+${TAB}--reporter verbose --mode production \$(params)
 
 .PHONY: lint
 lint:
@@ -242,21 +320,18 @@ ${TAB}\$(LINTER) --ext js,jsx --fix .
 lint-check:
 ${TAB}\$(LINTER) --ext js,jsx .
 
-.PHONY: lint-dry
-lint-dry:
-${TAB}\$(LINTER) --ext js,jsx --fix-dry-run .
-
 .PHONY: fmt
+params ?=.
 fmt:
-${TAB}\$(FORMATER) --write .
+${TAB}\$(FORMATER) --write \$(params)
 
 .PHONY: fmt-check
+params ?=.
 fmt-check:
-${TAB}\$(FORMATER) --check .
+${TAB}\$(FORMATER) --check \$(params)
 
-.PHONY: fmt-dry
-fmt-dry:
-${TAB}\$(FORMATER) .
+dirs:
+${TAB}\$(MKDIRP) \$(LOGDIR)
 EOF
 }
 
@@ -438,7 +513,13 @@ EOF
 "parserOptions": {
 "ecmaVersion": "latest",
 "sourceType": "module"
-}
+},
+"rules": {
+    "import/prefer-default-export": "off",
+    "import/extensions": ["error", "ignorePackages"],
+    "import/no-unresolved": "off",
+    "import/no-absolute-path": "off"
+  }
 }
 EOF
 
@@ -492,6 +573,7 @@ gen_package_json() {
 init_vite() {
     npm create vite@latest . -- --template react
     npm install
+    npm install --save-prod vite @vitejs/plugin-react @types/react @types/react-dom
 }
 
 get_pkg_name() {
