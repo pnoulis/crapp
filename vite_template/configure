@@ -10,7 +10,7 @@ GEN_RANDOM_NAME="${EXECDIR}/gname"
 
 main() {
     parse_args "$@"
-    set -- "$args"
+    set -- "${args[@]}"
     get_pkg_name "$@"
     [[ $# > 0 ]] && shift
     get_pkg_srcdir "$@"
@@ -19,8 +19,19 @@ main() {
     if [[ -n "${DEBUG:-}" ]]; then
         # mkdir ./build 2>/dev/null
         # rm -rdf ./build/*
-        cd ./build
-        gen_eslint
+        echo $PKG_NAME
+        echo $PKG_ROOTDIR
+        cat <<EOF
+"engines": {
+"node": ">=$(node --version | sed 's/v//')",
+"npm": ">=$(npm --version | sed 's/v//')"
+}
+EOF
+        # mkdir "${PKG_SRCDIR}"
+        # cd "${PKG_SRCDIR}"
+        # gen_dirs
+        # tree -a
+        exit 0
     else
         mkdir "${PKG_SRCDIR}"
         if [[ $? > 0 ]]; then
@@ -40,23 +51,13 @@ main() {
     gen_readme
     gen_makefile
     gen_eslint
-    mkdir -p docs tests src scripts assets var/log tmp
-    rm -rdf src/*
     gen_gitignore
     gen_gitattributes
-    touch .env \
-          .env.local \
-          .env.development \
-          .env.staging \
-          .env.production \
-          .env.development.local \
-          .env.staging.local \
-          .env.production.local \
-          docs/dev.org \
-          tests/.gitkeep \
-          src/.gitkeep \
-          assets/.gitkeep \
-          scripts/.gitkeep
+    gen_dirs
+    install_dotenv
+    install_reset_css
+    install_tools
+    gen_react_skeleton
     make fmt
     make lint
     if [[ $? > 0 ]]; then
@@ -65,29 +66,96 @@ main() {
     init_git
 }
 
+gen_react_skeleton() {
+    cp "${EXECDIR}/index.html" ./index.html
+    cp "${EXECDIR}/main.jsx" ./src
+    cp "${EXECDIR}/App.jsx" ./src/app
+    cp "${EXECDIR}/Scratch.jsx" ./src/app
+    cp "${EXECDIR}/routes.jsx" ./src/app
+    cp -r "${EXECDIR}/route_home" ./src/app/
+    cp "${EXECDIR}/app_index.js" ./src/app/index.js
+    cp "${EXECDIR}/index.css" ./public
+}
+
+install_tools() {
+    npm install --save-prod \
+        react-router-dom \
+        pino \
+        styled-components
+    npm install --save-dev pino-pretty
+}
+install_reset_css() {
+    curl https://raw.githubusercontent.com/elad2412/the-new-css-reset/main/css/reset.css > ./public/reset.css
+}
+
+install_dotenv() {
+    cp "${EXECDIR}/dotenv.sh" ./scripts/dotenv.sh
+    chmod +x ./scripts/dotenv.sh
+}
+
+gen_dirs() {
+    # documentation
+    mkdir -p docs/api
+    touch ./docs/dev.org
+    touch ./docs/api/.gitkeep
+
+    # tests
+    mkdir -p tests
+    touch ./tests/.gitkeep
+
+    # scripts
+    mkdir -p ./scripts
+    touch ./scripts/.gitkeep
+
+    # assets
+    mkdir -p ./assets/{icons,fonts,brand,backgrounds}
+    touch ./assets/{icons,fonts,brand,backgrounds}/.gitkeep
+
+    # tmp
+    mkdir -p ./tmp
+    touch ./tmp/scratch.js
+
+    # config
+    mkdir -p ./config/{env,data}
+    touch ./config/env/env
+    touch ./config/env/env.{development,staging,production}
+    touch ./config/data/.gitkeep
+
+    # src
+    # vite initializes src
+    mkdir src
+    rm -rdf ./src 2>/dev/null
+    mkdir -p ./src/{app,services,components}
+    touch ./src/{app,services,components}/.gitkeep
+    touch ./src/main.jsx
+
+    # public
+    rm -rdf ./public 2>/dev/null
+    mkdir ./public
+    touch ./public/index.css
+
+    # root
+    touch .env.local .env.development.local .env.staging.local .env.production.local
+    touch ./configure.js
+}
+
 init_vitest() {
     npm install --save-dev vitest
 }
 gen_vite_config() {
-    
-    cat <<EOF
+    cat <<EOF > vite.config.js
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
 import { configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
-
-const showEnv = () => ({
-  name: "log-config",
-  configResolved(resolvedConfig) {
-    console.log(resolvedConfig.env);
-  },
-});
+import svgr from 'vite-plugin-svgr';
 
 // https:vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), showEnv()],
+  plugins: [react(), svgr()],
   build: {
     outDir: "build",
+    target: "esnext",
   },
   test: {
     // ...
@@ -105,234 +173,17 @@ init_git() {
     git commit -m 'Initial commit'
 }
 gen_gitignore() {
-    cat <<EOF > .gitignore
-/build*
-/dist*
-/var*
-/coverage*
-/tmp*
-/run*
-
-# XDG user directories
-.config
-.local
-.cache
-
-# logs
-*.log
-*.logs
-
-# environment variables
-.env.*.local
-.env.local
-
-# node
-node_modules
-package-lock.json
-
-# emacs
-# cached changes
-\#*\#
-# undo cache
-*~
-
-# vim
-:w
-
-# vscode
-.vscode
-
-# intellij
-.idea
-EOF
+    cp "${EXECDIR}/gitignore" ./.gitignore
 }
 
 gen_gitattributes() {
  cat <<EOF > .gitattributes
-
-# automatic conversion of crlf to lf for text files
-*                 text=auto
-
-# unix scripts
-*.sh              text eol=lf
-*.bash            text eol=lf
-*.fish            text eol=lf
-*.zsh             text eol=lf
-
-# windows scripts
-*.p1              text eol=crlf
-*.ps1             text eol=crlf
-*.bat             text eol=crlf
-*.cmd             text eol=crlf
-
-# Graphics
-*.ai              binary
-*.bmp             binary
-*.eps             binary
-*.gif             binary
-*.gifv            binary
-*.ico             binary
-*.jng             binary
-*.jp2             binary
-*.jpg             binary
-*.jpeg            binary
-*.jpx             binary
-*.jxr             binary
-*.pdf             binary
-*.png             binary
-*.psb             binary
-*.psd             binary
-# SVG treated as an asset (binary) by default.
-*.svg             text
-# If you want to treat it as binary,
-# use the following line instead.
-# *.svg           binary
-*.svgz            binary
-*.tif             binary
-*.tiff            binary
-*.wbmp            binary
-*.webp            binary
-
-# Video
-*.3gpp            binary
-*.3gp             binary
-*.as              binary
-*.asf             binary
-*.asx             binary
-*.avi             binary
-*.fla             binary
-*.flv             binary
-*.m4v             binary
-*.mng             binary
-*.mov             binary
-*.mp4             binary
-*.mpeg            binary
-*.mpg             binary
-*.ogv             binary
-*.swc             binary
-*.swf             binary
-*.webm            binary
-
-# Audio
-*.kar             binary
-*.m4a             binary
-*.mid             binary
-*.midi            binary
-*.mp3             binary
-*.ogg             binary
-*.ra              binary
-
-# Fonts
-*.ttf             binary
-*.eot             binary
-*.otf             binary
-*.woff            binary
-*.woff2           binary
-
-# Archives
-*.7z              binary
-*.gz              binary
-*.jar             binary
-*.rar             binary
-*.tar             binary
-*.zip             binary
+* text=auto eol=lf
 EOF
 }
 
 gen_makefile() {
-    TAB="$(printf '\t')"
-
-        cat <<EOF > Makefile
-#!/usr/bin/make
-
-# Make and Shell behavior
-SHELL = /usr/bin/bash
-.DELETE_ON_ERROR:
-.DEFAULT_GOAL = all
-
-# Critical Paths
-LOGDIR=var/log
-
-# Programs
-INSTALL = /usr/bin/install
-MKDIRP = /usr/bin/mkdir -p
-CP = /usr/bin/cp
-RM = /usr/bin/rm
-CHMOD = /usr/bin/chmod
-BUILD_SYS = npx vite
-LINTER = npx eslint
-FORMATER = npx prettier
-VITEST = npx vitest
-
-.PHONY: all
-all: run
-
-.PHONY: run
-run: dirs
-${TAB}NODE_ENV=development \$(BUILD_SYS) serve \\
-${TAB}--mode development \$(params)
-
-.PHONY: run-staging
-run-stage: dirs
-${TAB}NODE_ENV=development \$(BUILD_SYS) serve \\
-${TAB}--mode staging \$(params)
-
-.PHONY: run-prod
-run-prod: dirs
-${TAB}NODE_ENV=development \$(BUILD_SYS) serve \\
-${TAB}--mode production \$(params)
-
-.PHONY: build
-build:
-${TAB}NODE_ENV=production \$(BUILD_SYS) build \\
-${TAB}--mode development \$(params)
-
-.PHONY: build-staging
-build-staging:
-${TAB}NODE_ENV=production \$(BUILD_SYS) build \\
-${TAB}--mode staging \$(params)
-
-.PHONY: build-prod
-build-prod:
-${TAB}NODE_ENV=production \$(BUILD_SYS) build \\
-${TAB}--mode production \$(params)
-
-.PHONY: test
-test:
-${TAB}NODE_ENV=development \$(VITEST) run \\
-${TAB}--reporter verbose --mode development \$(params)
-
-.PHONY: test-staging
-test-staging:
-${TAB}NODE_ENV=development \$(VITEST) run \\
-${TAB}--reporter verbose --mode staging \$(params)
-
-.PHONY: test-prod
-test-prod:
-${TAB}NODE_ENV=development \$(VITEST) run \\
-${TAB}--reporter verbose --mode production \$(params)
-
-.PHONY: lint
-lint:
-${TAB}\$(LINTER) --ext js,jsx --fix .
-
-.PHONY: lint-check
-lint-check:
-${TAB}\$(LINTER) --ext js,jsx .
-
-.PHONY: fmt
-params ?=.
-fmt:
-${TAB}\$(FORMATER) --write \$(params)
-
-.PHONY: fmt-check
-params ?=.
-fmt-check:
-${TAB}\$(FORMATER) --check \$(params)
-
-dirs:
-${TAB}\$(MKDIRP) \$(LOGDIR)
-EOF
+    cp "${EXECDIR}/Makefile" ./Makefile
 }
 
 gen_readme() {
@@ -424,7 +275,7 @@ EOF
 }
 
 gen_browserslist() {
-    cat <<EOF > browserslist
+    cat <<EOF > .browserslistrc
 last 2 Firefox versions
 last 2 Chrome versions
 last 2 ChromeAndroid versions
@@ -518,7 +369,8 @@ EOF
     "import/prefer-default-export": "off",
     "import/extensions": ["error", "ignorePackages"],
     "import/no-unresolved": "off",
-    "import/no-absolute-path": "off"
+    "import/no-absolute-path": "off",
+    "react/prop-types": "off"
   }
 }
 EOF
@@ -547,12 +399,17 @@ merge_package_json() {
 "type": "git",
 "url": "${PKG_REPO}.git"
 },
-"type": "module",
-"browser": true,
 "scripts": {
-"dev": "make dev",
+"dev": "make run",
 "build": "make build",
 "test": "make test"
+},
+"type": "module",
+"private": true,
+"browser": true,
+"engines": {
+"node": ">=$(node --version | sed 's/v//')",
+"npm": ">=$(npm --version | sed 's/v//')"
 }
 }
 EOF
@@ -573,7 +430,7 @@ gen_package_json() {
 init_vite() {
     npm create vite@latest . -- --template react
     npm install
-    npm install --save-prod vite @vitejs/plugin-react @types/react @types/react-dom
+    npm install --save-prod vite @vitejs/plugin-react @types/react @types/react-dom vite-plugin-svgr
 }
 
 get_pkg_name() {
@@ -585,7 +442,7 @@ get_pkg_name() {
 get_pkg_srcdir() {
     PKG_ROOTDIR="${1:-}"
     if [[ -z "${PKG_ROOTDIR:-}" ]]; then
-        PKG_ROOTDIR=${HOME}/tmp
+        PKG_ROOTDIR=$(pwd)
     else
         PKG_ROOTDIR="$(realpath --canonicalize-missing "${1:-}")"
     fi
