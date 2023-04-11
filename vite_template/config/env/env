@@ -1,0 +1,5 @@
+NODE_ENV=production
+BUILD=production
+MODE=production
+HOST=production
+TARGET=node

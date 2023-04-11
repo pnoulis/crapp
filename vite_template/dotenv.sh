@@ -5,9 +5,13 @@ set -o errexit
 EXECDIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
 
 # Options
-PKGDIR=
-ENVDIR=
-MODE=
+PKGDIR=.
+ENVDIR=.
+MODE=production
+BUILD=
+HOST=
+TARGET=
+CLIENV=
 declare -gA SWITCH_PREFIXES=()
 
 # Loaded environment
@@ -44,10 +48,11 @@ ${0} was created with the intented goals of:
   Dotenv categorizes the loading of the environment in three stages.
   1. loading of static envars files
   2. loading of local envars files
-  3. loading of cmd envars
-  4. expansion
-  5. prefix switch
-  6. writting out the loaded environment
+  3. loading of process environment
+  4. loading of cli environment
+  5. expansion
+  6. prefix switch
+  7. writting out the loaded environment
 
   --- 1. Loading of the static environment
   Static envars files are those that are usually commited in a repository.
@@ -89,15 +94,16 @@ ${0} was created with the intented goals of:
   * Notice how these files are expected to be dotfiles (hidden). Not so much to
   keep them safe but rather to declutter the view.
 
-  --- 3. Loading of the command line or process enviroment
-  Environment variables specified through the command line or are part of the
-  parent process environment have the highest possible priority.
-  The --mode is not consulted in this stage.
+  --- 3. Loading of the process enviroment
+  Environment variables that have already been loaded at this stage are replaced
+  by those inherited from the parent process environment. Therefore if an envar
+  is not already part of the ENV map it shall not be copied.
 
-  Example:
-  SOME_ENV=yolo ${0}
+  --- 4. Loading of the cli environment
+  Specifically all envars declared through the parameter -e are loaded.
+  The MODE and TARGET variables are also made part of the ENV at this point in time.
 
-  --- 4. Expansion
+  --- 5. Expansion
   It is sometimes usefull to be able to construct an envar by referering other
   envars which may have been already defined or will be at some later loading stage.
 
@@ -108,10 +114,13 @@ ${0} was created with the intented goals of:
 
   * Notice how the expansion supports defaults in the case of a missing environment
 
-  --- 5. Prefix switch
+  --- 6. Prefix switch
   Switches prefixes or adds a prefix.
 
-  --- 6. Writting out the loaded environment.
+  --switch-prefixes='one:two,three:four'
+  --switch-prefixes='one:two'
+
+  --- 7. Writting out the loaded environment.
   ${0} First truncates and then writes the loaded enviroment at the <project_root>/.env
 
   The project root is specified through the paramater --pkgdir.
@@ -120,6 +129,15 @@ ${0} was created with the intented goals of:
     -m, --mode - config mode
              If --mode is not provided the script looks for a value
              through the process envar MODE
+    --build - build machine
+             --build= -> the machine currently building the program
+    --host - host machine
+             --host= -> the machine that shall host the binary
+    --target - target machine
+             --target= -> the machine that the binary has been compiled for.
+    -e, --environment='key=value;'
+             Each key value pair denotes an environment variable.
+             Each pair is separated by a semicolon ';'
     --envdir - The root directory of the environment variable files
              or the process envar ENVDIR
     --pkgdir - The root directory of the package / application.
@@ -141,8 +159,6 @@ main() {
     parse_args "$@"
     set -- "${POSARGS[@]}"
 
-    MODE=${MODE:=dev}
-
     # If PKGDIR or ENVDIR do not pass tests exit
     if [[ -z "${PKGDIR:-}" ]]; then
         die "Missing \$PKGDIR"
@@ -158,11 +174,34 @@ main() {
 
     load_static_env
     load_local_env
-    load_cmd_env
-    switch_prefixes
+    load_proc_env
+    load_clienv
     expand_envars
-    ENV["MODE"]=${MODE}
+    switch_prefixes
     write_env
+}
+
+load_clienv() {
+    while IFS=';' read -r -d';' key; do
+        ENV["${key%%=*}"]="${key##*=}"
+    done <<<"${CLIENV}"
+
+    if [[ -n "${MODE:-}" ]]; then
+        ENV['MODE']=${MODE}
+    fi
+
+    if [[ -n "${BUILD:-}" ]]; then
+        ENV['BUILD']=${BUILD}
+    fi
+
+    if [[ -n "${HOST:-}" ]]; then
+        ENV['HOST']=${HOST}
+    fi
+
+    if [[ -n "${TARGET:-}" ]]; then
+        ENV['TARGET']=${TARGET}
+    fi
+
 }
 
 ensure_newline() {
@@ -208,16 +247,16 @@ switch_prefixes() {
 expand_envars() {
     set -o allexport
     for i in "${!ENV[@]}"; do
-      export ${i}=${ENV[$i]}
+        export ${i}=${ENV[$i]}
     done
 
     for i in "${!ENV[@]}"; do
-      declare "${i}"=$(eval echo "${ENV[$i]}")
-      ENV[$i]=$(eval echo "${ENV[$i]}")
+        declare "${i}"=$(eval echo "${ENV[$i]}")
+        ENV[$i]=$(eval echo "${ENV[$i]}")
     done
 }
 
-load_cmd_env() {
+load_proc_env() {
     for i in "${!ENV[@]}"; do
         if [[ -n "${!i}" ]]; then
             ENV[$i]=${!i}
@@ -335,6 +374,18 @@ parse_args() {
         case "${1:-}" in
             -m | --mode*)
                 MODE=$(OPTIONAL=0 parse_param "$@") || shift $?
+                ;;
+            --build*)
+                BUILD=$(parse_param "$@") || shift $?
+                ;;
+            --host*)
+                HOST=$(parse_param "$@") || shift $?
+                ;;
+            --target*)
+                TARGET=$(parse_param "$@") || shift $?
+                ;;
+            -e | --environment*)
+                CLIENV=$(parse_param "$@") || shift $?
                 ;;
             --pkgdir*)
                 PKGDIR=$(parse_param "$@") || shift $?

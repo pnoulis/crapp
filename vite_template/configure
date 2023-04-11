@@ -17,26 +17,22 @@ main() {
     [[ $# > 0 ]] && shift
     gen_pkg_meta
     if [[ -n "${DEBUG:-}" ]]; then
-        # mkdir ./build 2>/dev/null
-        # rm -rdf ./build/*
-        echo $PKG_NAME
-        echo $PKG_ROOTDIR
-        cat <<EOF
-"engines": {
-"node": ">=$(node --version | sed 's/v//')",
-"npm": ">=$(npm --version | sed 's/v//')"
-}
-EOF
-        # mkdir "${PKG_SRCDIR}"
-        # cd "${PKG_SRCDIR}"
-        # gen_dirs
-        # tree -a
-        exit 0
-    else
-        mkdir "${PKG_SRCDIR}"
-        if [[ $? > 0 ]]; then
-            die "Failed to create dir ${PKG_SRCDIR}"
+        echo "debug"
+
+        if [[ -n "${UPDATE:-}" ]]; then
+            echo should update
+        else
+            echo should not update
         fi
+        exit
+    else
+        if [[ -z "${UPDATE:-}" ]]; then
+            mkdir "${PKG_SRCDIR}"
+            if [[ $? > 0 ]]; then
+                die "Failed to create dir ${PKG_SRCDIR}"
+            fi
+        fi
+
         cd "${PKG_SRCDIR}"
         init_vite
     fi
@@ -63,14 +59,16 @@ EOF
     if [[ $? > 0 ]]; then
         die "FIx linter problems then commit"
     fi
-    init_git
+    if [[ -z "${UPDATE:-}" ]]; then
+        init_git
+    fi
 }
 
 gen_react_skeleton() {
     cp "${EXECDIR}/index.html" ./index.html
     cp "${EXECDIR}/main.jsx" ./src
     cp "${EXECDIR}/App.jsx" ./src/app
-    cp "${EXECDIR}/Scratch.jsx" ./src/app
+    cp -r "${EXECDIR}/scratch" ./src/
     cp "${EXECDIR}/routes.jsx" ./src/app
     cp -r "${EXECDIR}/route_home" ./src/app/
     cp "${EXECDIR}/app_index.js" ./src/app/index.js
@@ -116,14 +114,12 @@ gen_dirs() {
     touch ./tmp/scratch.js
 
     # config
-    mkdir -p ./config/{env,data}
-    touch ./config/env/env
+    cp -r "${EXECDIR}/config" ./
     touch ./config/env/env.{development,staging,production}
     touch ./config/data/.gitkeep
 
     # src
     # vite initializes src
-    mkdir src
     rm -rdf ./src 2>/dev/null
     mkdir -p ./src/{app,services,components}
     touch ./src/{app,services,components}/.gitkeep
@@ -440,6 +436,11 @@ get_pkg_name() {
     fi
 }
 get_pkg_srcdir() {
+    if [[ -n "${UPDATE:-}" ]]; then
+        PKG_SRCDIR="$(realpath --canonicalize-existing "${1:-}")"
+        return
+    fi
+
     PKG_ROOTDIR="${1:-}"
     if [[ -z "${PKG_ROOTDIR:-}" ]]; then
         PKG_ROOTDIR=$(pwd)
@@ -493,6 +494,9 @@ parse_args() {
     declare -ga args=()
     while (($# > 0)); do
         case "${1:-}" in
+            --update)
+                UPDATE=0
+                ;;
             --debug)
                 DEBUG=0
                 ;;

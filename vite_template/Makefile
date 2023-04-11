@@ -19,97 +19,90 @@ LINTER = npx eslint
 FORMATER = npx prettier
 VITEST = npx vitest
 PRETTY_OUTPUT = npx pino-pretty
+MAKE_ENV = ./scripts/dotenv.sh --pkgdir=. --envdir=./config/env
 
 .PHONY: all
 all: run
 
-.PHONY: node-exec
-node-exec: env
+.PHONY: node-run
+node-run:
 	@if test -z "$$params"; then echo \
 	"make node-exec missing params: -> params=./file make node-exec"; \
 	exit 1; \
 	fi
+	$(MAKE_ENV) --mode=dev --host=dev
 	@set -a; source ./.env && node "$${params}" | $(PRETTY_OUTPUT)
 
 .PHONY: scratch
-scratch: env
+scratch:
+	$(MAKE_ENV) --mode=dev --host=dev
 	set -a; source ./.env && node ./tmp/scratch.js | $(PRETTY_OUTPUT)
 
 .PHONY: run
-run: dirs env-dev
-	NODE_ENV=development $(BUILD_SYS) serve \
-	--mode development $(params)
+run: dirs
+	$(MAKE_ENV) --mode=dev --host=dev
+	set -a; source ./.env && $(BUILD_SYS) serve
 
 .PHONY: run-staging
-run-staging: dirs env-staging
-	NODE_ENV=development $(BUILD_SYS) serve \
-	--mode staging $(params)
+run-staging: dirs
+	$(MAKE_ENV) --mode=staging --host=dev
+	set -a; source ./.env && $(BUILD_SYS) serve
 
 .PHONY: run-prod
-run-prod: dirs env-prod
-	NODE_ENV=development $(BUILD_SYS) serve \
-	--mode production $(params)
+run-prod: dirs
+	$(MAKE_ENV) --mode=prod --host=dev
+	set -a; source ./.env && $(BUILD_SYS) serve
 
 .PHONY: build
 build:
-	NODE_ENV=production $(BUILD_SYS) build \
-	--mode development $(params)
+	$(MAKE_ENV) --mode=dev
+	set -a; source ./.env && $(BUILD_SYS) build
 
 .PHONY: build-staging
 build-staging:
-	NODE_ENV=production $(BUILD_SYS) build \
-	--mode staging $(params)
+	$(MAKE_ENV) --mode=staging
+	set -a; source ./.env && $(BUILD_SYS) build
 
 .PHONY: build-prod
 build-prod:
-	NODE_ENV=production $(BUILD_SYS) build \
-	--mode production $(params)
+	$(MAKE_ENV) --mode=prod
+	set -a; source ./.env && $(BUILD_SYS) build
 
 .PHONY: test
-test: env-dev
-	NODE_ENV=development $(VITEST) run \
-	--reporter verbose --mode development $(params)
+test:
+	$(MAKE_ENV) --mode=dev --host=dev
+	$(VITEST) run --reporter verbose
 
 .PHONY: test-staging
-test-staging: env-staging
-	NODE_ENV=development $(VITEST) run \
-	--reporter verbose --mode staging $(params)
+test-staging:
+	$(MAKE_ENV) --mode=staging --host=dev
+	$(VITEST) run --reporter verbose
 
 .PHONY: test-prod
-test-prod: env-prod
-	NODE_ENV=development $(VITEST) run \
-	--reporter verbose --mode production $(params)
+test-prod:
+	$(MAKE_ENV) --mode=prod --host=dev
+	$(VITEST) run --reporter verbose
 
 .PHONY: lint
 lint:
-	$(LINTER) --ext js,jsx --fix .
+	$(LINTER) --ext js,jsx --fix "$${params:-.}"
 
 .PHONY: lint-check
 lint-check:
-	$(LINTER) --ext js,jsx .
+	$(LINTER) --ext js,jsx "$${params:-.}"
 
 .PHONY: fmt
 fmt:
 	$(FORMATER) --write "$${params:-.}"
 
 .PHONY: fmt-check
-params ?=.
 fmt-check:
-	$(FORMATER) --check $(params)
+	$(FORMATER) --check "$${params:-.}"
+
+
+.PHONY: env
+env:
+	$(MAKE_ENV) $(params)
 
 dirs:
 	$(MKDIRP) $(LOGDIR)
-
-.PHONY: env env-dev env-staging env-prod
-env:
-	./scripts/dotenv.sh --pkgdir=. --envdir=./config/env --mode $(MODE)
-	@cat .env
-env-dev:
-	./scripts/dotenv.sh --pkgdir=. --envdir=./config/env --mode dev
-	@cat .env
-env-staging:
-	./scripts/dotenv.sh --pkgdir=. --envdir=./config/env --mode staging
-	@cat .env
-env-prod:
-	./scripts/dotenv.sh --pkgdir=. --envdir=./config/env --mode prod
-	@cat .env

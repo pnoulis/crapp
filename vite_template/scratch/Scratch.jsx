@@ -1,8 +1,13 @@
 import * as React from "react";
 import styled from "styled-components";
+import Component from "./current.jsx";
 
 function ScratchMain() {
-  return <StyleMain>TEST COMPONENT</StyleMain>;
+  return (
+    <StyleMain>
+      <Component />
+    </StyleMain>
+  );
 }
 
 const StyleScratch = styled.div`
