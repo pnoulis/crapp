@@ -86,3 +86,18 @@ rename to target_path
 target_summary
 target_description
 target_version
+
+* crapp new
+** create a directory at the location specified by the last positional argument
+--name=project_name .
+
+If a location to create the directory at has not been provided assume it is the current working directory.
+
+If name has not been provided generate a random name.
+
+Work should be carried out in a temporary location so as to not dirty the filesystem with unnecessary files
+in case the process fails.
+
+
+
+
