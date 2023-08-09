@@ -1,61 +1,51 @@
 #!/usr/bin/env bash
 
+usage() {
+    cat <<EOF
+${0} short summary
+
+     long description
+EOF
+    exit 0
+}
+
 trap 'exit 1' 10
-PROC=$$
 # Exit script on error
 set -o errexit
+declare -g PROC=$$
 
-# Current location
 SRCDIR_ABS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
-JS_TEMPLATES="${TEMPLATESDIR}/js"
-TEMPLATE=menu
-TEMPLATE_FILEPATH=
+export PROCDIR="$(pwd)"
+cd $SRCDIR_ABS
+SRCDIR='.'
 
 main() {
     parse_args "$@"
     set -- "${POSARGS[@]}"
-
-    case "$TEMPLATE" in
-        simple-index)
-            TEMPLATE_FILEPATH="${JS_TEMPLATES}/class.js"
-            ;;
-        react-index)
-            ;;
-        *)
-            fatal "Missing template '${TEMPLATE}'"
-            ;;
-    esac
-
-    [ $PRINT ] && {
-        cat $TEMPLATE_FILEPATH
-        exit 0
-    }
-    DEBUG=0 source ${DATADIR}/filenames.sh "$@"
 }
 
 parse_args() {
     declare -ga POSARGS=()
     while (($# > 0)); do
         case "${1:-}" in
-            --debug)
+            -e | --example | --example=*)
+                EXAMPLE=$(parse_param "$@") || shift $?
+                EXAMPLE=$(OPTIONAL=0 parse_param "$@") || shift $?
+            -d | --debug)
                 DEBUG=0
-                ;;
-            -t | --template)
-                TEMPLATE=$(OPTIONAL=0 parse_param "$@") || shift $?
-                ;;
-            -p | --print)
-                PRINT=0
                 ;;
             -h | --help)
                 usage
-                exit 0
                 ;;
             -[a-zA-Z][a-zA-Z]*)
                 local i="${1:-}"
                 shift
+                local rest="$@"
+                set --
                 for i in $(echo "$i" | grep -o '[a-zA-Z]'); do
-                    set -- "-$i" "$@"
+                    set -- "$@" "-$i"
                 done
+                set -- $@ $rest
                 continue
                 ;;
             --)
@@ -95,16 +85,20 @@ parse_param() {
     echo "${arg:-}"
     return $toshift
 }
+export -f parse_param
 
 fatal() {
     echo "$@" >&2
     kill -10 $PROC
     exit 1
 }
+export -f fatal
 
 debug() {
     [ ! $DEBUG ] && return
     echo debug: "$@" >&2
 }
+export -f debug
+
 
 main "$@"

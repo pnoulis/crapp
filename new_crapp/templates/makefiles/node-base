@@ -1,0 +1,117 @@
+#!/usr/bin/make
+
+#	The shell that is going to execute the recipies.
+SHELL					 = /usr/bin/bash
+#	Backtrack changes so that the directory tree does not
+#	contain incomplete changes.
+.DELETE_OR_ERROR:
+#	Default target to run against.
+.DEFAULT_GOAL	 := all
+
+#	System programs
+INSTALL				 = /usr/bin/install
+MKDIRP				 = /usr/bin/mkdir -p
+SORT					 = /usr/bin/sort
+CP						 = /usr/bin/cp
+RM						 = /usr/bin/rm
+CHMOD					 = /usr/bin/chmod
+
+# NPM programs
+NODE					 = $(NVM_BIN)/node
+BUNDLER				 = $(NVM_BIN)/esbuild
+TESTER				 = $(NVM_BIN)
+LINTER				 = $(NVM_BIN)
+FORMATER			 = $(NVM_BIN)
+PRETTY_OUTPUT	 = $(NVM_BIN)
+
+#	Self developed
+DOTENV				= ~/bin/dotenv
+
+#	Dirs
+PKGDIR				 = .
+PKGDIR_ABS		 = $(shell pwd)
+SRCDIR				 = $(PKGDIR)/src
+TESTDIR				 = $(PKGDIR)/tests
+DOCSDIR				 = $(PKGDIR)/docs
+CONFDIR				 = $(PKGDIR)/config
+TEMPDIR				 = $(PKGDIR)/tmp
+BUILDIR				 = $(PKGDIR)/build
+ENVDIRS				 = $(PKGDIR)/config/env $(PKGDIR)
+
+# Root of the module dependency graph
+ENTRY_POINT_BASENAME	 = index.js
+ENTRY_POINT						 = $(SRCDIR)/index.js
+
+# ENVIRONMENT VARIABLES
+ENVARS = RUNTIME=node;
+
+.PHONY: all
+all: build
+
+# ------------------------------ RUN ------------------------------ #
+.PHONY: run run-entry run-build
+
+run: file ?= $(ENTRY_POINT)
+run: mode ?= 'development'
+run:
+	$(NODE) $(file)
+
+run-entry: mode ?= 'development'
+run-entry:
+	$(NODE) $(ENTRY_POINT)
+
+run-build: mode ?= 'development'
+run-build: build
+	$(NODE) $(BUILDIR)/$(ENTRY_POINT)
+
+# ------------------------------ BUILD ------------------------------ #
+.PHONY: build
+
+# BUILD FLAGS
+BUILD_TARGET	 ?= node
+BUILD_MINIFY	 ?= false
+BUILD_OUTFILE	 ?= $(BUILDIR)/$(ENTRY_POINT_BASENAME)
+
+build:				 mode ?= 'production'
+build:				 envars ?= 'BUNDLED=true'
+build:
+	$(BUNDLER) $(ENTRY_POINT) --bundle \
+	--target=$(BUILD_TARGET) --minify=$(BUILD_MINIFY) \
+	--outfile=$(BUILD_OUTFILE)
+
+# ------------------------------ SCRATCH ------------------------------ #
+.PHONY: scratch
+
+scratch:
+	$(NODE) $(TEMPDIR)/scratch.js
+
+# ------------------------------ CLEAN ------------------------------ #
+.PHONY: clean distclean
+
+clean:
+	rm -rdf dist build
+
+distclean: clean
+	rm -rdf node_modules package-lock.json
+
+# ------------------------------ ENV ------------------------------ #
+.PHONY: env env-dry
+mode ?= production
+envars ?= ""
+
+env:
+	$(DOTENV) --mode=$(mode) --environment=$(ENVARS)$(envars) \
+	| $(SORT) > $(PKGDIR)/.env
+
+env-dry:
+	$(DOTENV) --mode=$(mode) --environment=$(envars) \
+	| $(SORT)
+
+# ------------------------------ MISC ------------------------------ #
+
+# ------------------------------ HELP ------------------------------ #
+.PHONY: help
+
+help:
+	@cat $(PKGDIR)/Makefile | grep -i --color=auto 'phony'
+

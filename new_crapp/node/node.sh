@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
+trap 'exit 1' 10
+PROC=$$
 # Exit script on error
 set -o errexit
 
 # Current location
 SRCDIR_ABS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
-MAKEFILE_TEMPLATES="${TEMPLATESDIR}/makefiles"
-TEMPLATE=menu
-TEMPLATE_FILEPATH=
+export NODE_TEMPLATES="${TEMPLATESDIR}/node"
+export TEMPLATE=test
+export TEMPLATE_FILEPATH=
 
 main() {
     parse_args "$@"
@@ -15,11 +17,11 @@ main() {
     local LOC_FILENAME="$1"
 
     [ $LIST_TEMPLATES ] && {
-        tree -L 1 $MAKEFILE_TEMPLATES
+        tree -L 1 $NODE_TEMPLATES
         exit 0
     }
 
-    TEMPLATE_FILEPATH="${MAKEFILE_TEMPLATES}/${TEMPLATE}"
+    TEMPLATE_FILEPATH="${NODE_TEMPLATES}/${TEMPLATE}"
     debug template filepath $TEMPLATE_FILEPATH
 
     [ $DRY_RUN ] && {
@@ -32,11 +34,7 @@ main() {
     }
 
     [ ! "$FILENAMES_PARSED" ] && {
-        DEBUG=0 source ${DATADIR}/filenames.sh "$@"
-    }
-
-    [ ! -d "$TEMPDIR" ] && {
-        fatal "Temporary directory '$TEMPDIR' missing"
+        source ${DATADIR}/filenames.sh "$@"
     }
 
     if [ -x $TEMPLATE_FILEPATH ]; then
@@ -51,14 +49,17 @@ parse_args() {
     declare -ga POSARGS=()
     while (($# > 0)); do
         case "${1:-}" in
-            -t | --template)
+            -t | --template | --template=*)
                 TEMPLATE=$(parse_param "$@") || shift $?
                 ;;
             -l | --list)
                 LIST_TEMPLATES=0
                 ;;
-            -d | --dry-run)
-                DRY_RUN=0
+            -d | --debug)
+                export DEBUG=0
+                ;;
+            -D | --dry-run)
+                export DRY_RUN=0
                 ;;
             -[a-zA-Z][a-zA-Z]*)
                 local i="${1:-}"
@@ -68,8 +69,7 @@ parse_args() {
                 for i in $(echo "$i" | grep -o '[a-zA-Z]'); do
                     set -- "$@" "-$i"
                 done
-                set -- "$@" $rest
-                echo "$@"
+                set -- $@ $rest
                 continue
                 ;;
             --)

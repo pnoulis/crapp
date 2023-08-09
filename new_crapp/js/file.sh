@@ -7,7 +7,7 @@ set -o errexit
 
 # Current location
 SRCDIR_ABS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
-JS_TEMPLATES="${TEMPLATEDIR}/js"
+JS_TEMPLATES="${TEMPLATESDIR}/js"
 TEMPLATE=menu
 TEMPLATE_FILEPATH=
 
