@@ -1,0 +1,86 @@
+#!/usr/bin/make
+
+#	The shell that is going to execute the recipies.
+SHELL									 = /usr/bin/bash
+#	Backtrack changes so that the directory tree does not
+#	contain incomplete changes.
+.DELETE_OR_ERROR:
+#	Default target to run against.
+.DEFAULT_GOAL	         := all
+
+#	System programs
+INSTALL								 = /usr/bin/install
+MKDIRP								 = /usr/bin/mkdir -p
+SORT									 = /usr/bin/sort
+CP										 = /usr/bin/cp
+RM										 = /usr/bin/rm
+CHMOD									 = /usr/bin/chmod
+
+# Interpreters and compilers
+INTERPRETER            = $(SHELL)
+COMPILER               =
+
+# Language package manager programs
+TESTER								 =
+LINTER								 =
+FORMATER							 =
+PRETTY_OUTPUT					 =
+
+# 3rd party libraries / programs
+
+#	Self developed libraries / programs
+DOTENV				         = ~/bin/dotenv
+
+#	Dirs
+PKGDIR								 = .
+PKGDIR_ABS						 = $(shell pwd)
+SRCDIR								 = $(PKGDIR)/src
+TESTDIR								 = $(PKGDIR)/tests
+DOCSDIR								 = $(PKGDIR)/docs
+CONFDIR								 = $(PKGDIR)/config
+TEMPDIR								 = $(PKGDIR)/tmp
+BUILDIR								 = $(PKGDIR)/build
+ENVDIRS								 = $(PKGDIR)/config/env $(PKGDIR)
+
+# Root of the module dependency graph
+ENTRY_POINT_BASENAME	 = index.js
+ENTRY_POINT						 = $(SRCDIR)/index.js
+
+# ENVIRONMENT VARIABLES
+ENVARS =
+
+.PHONY: all
+all: run
+
+# ------------------------------ RUN ------------------------------ #
+.PHONY: run run-entry
+
+run: file ?= $(ENTRY_POINT)
+run: mode ?= 'development'
+run:
+	$(INTERPRETER) $(file)
+
+run-entry: mode ?= 'development'
+run-entry:
+	$(INTERPRETER) $(ENTRY_POINT)
+
+
+# ------------------------------ ENV ------------------------------ #
+.PHONY: env env-dry
+mode ?= production
+envars ?= ""
+
+env:
+	$(DOTENV) --mode=$(mode) --environment=$(ENVARS)$(envars) \
+	| $(SORT) > $(PKGDIR)/.env
+
+env-dry:
+	$(DOTENV) --mode=$(mode) --environment=$(envars) \
+	| $(SORT)
+
+# ------------------------------ HELP ------------------------------ #
+.PHONY: help
+
+help:
+	@cat $(PKGDIR)/Makefile | grep -i --color=auto 'phony'
+

@@ -101,3 +101,28 @@ in case the process fails.
 
 
 
+
+* Node template
+** Crapp should create its own package archive which will have significant benefits
+*** benefits
+1. Scaffolding a project will take significantly less time. Which will increase
+   overall usage of the program.
+2. No need for an internet connection, dependencies are stored locally.
+3. Protection against upstream eventualities, like servers being down, etc.
+*** How
+**** Saving packages locally
+download a package globally
+use npm to locate the package
+use npm to locate the package dependencies
+move package and dependencies over to the template
+**** use npm to locate a package
+npm ls package@semantic-version-specifier
+**** linter
+**** formatter
+**** bundler
+**** Install a package and all of its dependencies nested (--install-strategy=nested)
+*** Issues
+**** using npm dedupe to provide a clean node_modules
+
+
+

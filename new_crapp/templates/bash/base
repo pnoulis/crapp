@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+usage() {
+    cat <<EOF
+${0} short summary
+
+     long description
+EOF
+}
+
+trap 'exit 1' 10
+# Exit script on error
+set -o errexit
+declare -g PROC=$$
+
+SRCDIR_ABS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
+export PROCDIR="$(pwd)"
+cd $SRCDIR_ABS
+SRCDIR='.'
+
+main() {
+
+}
+
+fatal() {
+    echo "$@" >&2
+    kill -10 $PROC
+    exit 1
+}
+export -f fatal
+
+debug() {
+    [ ! $DEBUG ] && return
+    echo debug: "$@" >&2
+}
+export -f debug
+
+
+main "$@"

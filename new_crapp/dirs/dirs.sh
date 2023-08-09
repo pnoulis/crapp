@@ -7,7 +7,7 @@ set -o errexit
 
 # Current location
 SRCDIR_ABS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
-DIRS_TEMPLATES="${TEMPLATEDIR}/dirs"
+DIRS_TEMPLATES="${TEMPLATESDIR}/dirs"
 TEMPLATE=menu
 TEMPLATE_FILEPATH=
 

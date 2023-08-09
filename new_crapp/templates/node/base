@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+base() {
+    debug scaffolding node base
+
+    # Initialize application
+    ${DATADIR}/app/app.sh
+    # need to initialize npm
+    pushd ${TEMPDIR} >/dev/null
+    npm init -y >/dev/null
+    mkdir node_modules
+    popd >/dev/null
+    ## update package.json with info from PACKAGE
+    source ${TEMPDIR}/PACKAGE
+    jq --arg _ $PKG_NAME '.name = "\($_)"' ${TEMPDIR}/package.json \
+        | sponge ${TEMPDIR}/package.json
+    jq --arg _ $PKG_VERSION '.version = "\($_)"' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq --arg _ $PKG_DESCRIPTION '.description = "\($_)"' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq --arg _ $PKG_HOMEPAGE '.homepage = "\($_)"' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq --arg _ $PKG_BUGREPORT '.bugs = "\($_)"' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq --arg _ $PKG_KEYWORDS '.keywords = ["\($_)"]' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq --arg pkg_author $PKG_AUTHOR --arg pkg_email $PKG_AUTHOR_EMAIL \
+       '.author = "\($pkg_author)" + " <\($pkg_email)>"' ${TEMPDIR}/package.json \
+        | sponge ${TEMPDIR}/package.json
+    jq --arg _ $PKG_REPO '.repository = { "type": "git", "url": ($_)}' ${TEMPDIR}/package.json \
+        | sponge ${TEMPDIR}/package.json
+    jq '.type = "module"' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq '.private = true' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq '.browser = false' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    jq '.type = "module"' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+
+    # need a makefile
+    ${DATADIR}/makefile/makefile.sh --template base-node
+    # need to append to .gitignore node template
+    ${DATADIR}/git/git.sh --append --template gitignore/node .gitignore
+
+    # need a bundler
+    local pkg=esbuild
+    local pkg_dir=${NODE_TEMPLATES}/bundler-esbuild
+    local pkg_version=$(jq -r --arg pkg $pkg \
+                           '.dependencies."\($pkg)"' ${pkg_dir}/package.json)
+    ## Copy the bundler over to the target
+    cp -r ${pkg_dir}/node_modules/* ${TEMPDIR}/node_modules
+    ## Update target's package.json
+    jq --arg pkg $pkg \
+       --arg pkg_version $pkg_version \
+       '.devDependencies += { ($pkg): ($pkg_version) }' ${TEMPDIR}/package.json \
+        | sponge ${TEMPDIR}/package.json
+    
+    # need a linter
+    local pkg=eslint
+    local pkg_dir=${NODE_TEMPLATES}/linter-eslint
+    local pkg_version=$(jq -r --arg pkg $pkg \
+                           '.dependencies."\($pkg)"' ${pkg_dir}/package.json)
+    ## copy the linter over to the target
+    cp -r ${pkg_dir}/node_modules/* ${TEMPDIR}/node_modules
+    ## Update target's package.json
+    jq --arg pkg $pkg \
+       --arg pkg_version $pkg_version \
+       '.devDependencies += { ($pkg): ($pkg_version) }' ${TEMPDIR}/package.json \
+       | sponge ${TEMPDIR}/package.json
+    ## run the linters configuration wizard
+    cat ${TEMPDIR}/.gitignore > .eslintignore
+    ## Initialize eslint
+    pushd ${TEMPDIR} >/dev/null
+    npx eslint --init
+    popd >/dev/null
+
+    # need a formatter
+    local pkg=prettier
+    local pkg_dir=${NODE_TEMPLATES}/formatter-prettier
+    local pkg_version=$(jq -r --arg pkg $pkg \
+                           '.dependencies."\($pkg)"' ${pkg_dir}/package.json)
+    ## copy the formatter over to the target
+    cp -r ${pkg_dir}/node_modules/* ${TEMPDIR}/node_modules
+    ## Update target's package.json
+    jq --arg pkg $pkg \
+       --arg pkg_version $pkg_version \
+       '.devDependencies += { ($pkg): ($pkg_version) }' ${TEMPDIR}/package.json \
+        | sponge ${TEMPDIR}/package.json
+    cat ${TEMPDIR}/.gitignore > .prettierignore
+
+    # Integrate eslint and prettier
+    pushd ${TEMPDIR} >/dev/null
+    npm install --save-dev eslint-config-prettier
+    jq '.extends = [.extends, "prettier"]' eslintrc.json | sponge eslintrc.json
+    popd >/dev/null
+
+    # Commit initial
+    pushd ${TEMPDIR} >/dev/null
+    git add .
+    git commit --amend -m 'Initial commit'
+    popd >/dev/null
+}
