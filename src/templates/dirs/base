@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+base() {
+    debug scaffolding template dirs/base
+
+    if [ $DRY_RUN ]; then
+        cat <<EOF
+mkdir -p src
+mkdir -p tests
+mkdir -p tmp
+mkdir -p config/env
+mkdir -p docs
+mkdir -p scripts
+EOF
+        exit 0
+    fi
+
+    pushd $TARGET_DIRNAME >/dev/null
+    mkdir -p src
+    mkdir -p tests
+    mkdir -p tmp
+    mkdir -p config/env
+    mkdir -p docs
+    mkdir -p scripts
+
+    [ $GITKEEP ] && {
+        touch src/.gitkeep
+        touch tests/.gitkeep
+        touch config/.gitkeep
+        touch config/env/.gitkeep
+        touch docs/.gitkeep
+        touch tmp/.gitkeep
+        touch scripts/.gitkeep
+    }
+    popd >/dev/null
+}

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+base() {
+    debug scaffolding app base
+
+    # Need a directory tree
+    ${SUBCOMMANDSDIR}/dirs/dirs.sh --gitkeep --template base .
+    # Need a PACKAGE file
+    ${SUBCOMMANDSDIR}/pkg/pkg.sh .
+    # Need a projectile file
+    touch .projectile
+}

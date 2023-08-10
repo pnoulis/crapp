@@ -1,8 +1,0 @@
-package='crapp'
-package_fullname='Create Application'
-package_version='0.0.1'
-package_summary='Application template generator'
-package_description='Provided with a user defined template crapp shall duplicate it modifying it with new project-dependent values'
-package_keywords='bash, utilities, project-management, template-system'
-package_author='pavlos noulis github.com/pnoulis <pavlos.noulis@gmail.com>'
-package_contact='pavlos.noulis@gmail.com'

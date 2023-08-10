@@ -1,27 +1,24 @@
 #!/usr/bin/env bash
 
-# Exit script on error
-set -o errexit
-
-export FILENAME=
-export FILEROOTDIR="${2:-$PROCDIR}"
-export FILEPATH=
+export TARGET_BASENAME=
+export TARGET_DIRNAME="${2:-$PROCDIR}"
+export TARGET_PATH=
+export TARGET_NAMES_PARSED=0
 DEFAULT_NAME=
 
 main() {
     parse_args "$@"
     set -- "${POSARGS[@]}"
-    FILENAME="$1"
-    FILEROOTDIR="${2:-$PROCDIR}"
+    TARGET_BASENAME="$1"
+    TARGET_DIRNAME="${2:-$PROCDIR}"
 
-    # expand $FILEROOTDIR in case it is '.'. At the same time make sure through the
+    # expand $TARGET_DIRNAME in case it is '.'. At the same time make sure through the
     # -e flag that the file root directory does exist.
-    FILEROOTDIR="$(realpath -e "$FILEROOTDIR")"
-    FILENAME="${FILENAME:-$DEFAULT_NAME}"
-    FILENAME="${FILENAME:-$($GENERATE_RANDOM_NAME)}"
-    FILEPATH="${FILEROOTDIR}/${FILENAME}"
-    debug file path "${FILEPATH}"
-    export FILENAMES_PARSED=0
+    TARGET_DIRNAME="$(realpath -e "$TARGET_DIRNAME")"
+    TARGET_BASENAME="${TARGET_BASENAME:-$DEFAULT_NAME}"
+    TARGET_BASENAME="${TARGET_BASENAME:-$($GENERATE_RANDOM_NAME)}"
+    TARGET_PATH="${TARGET_DIRNAME}/${TARGET_BASENAME}"
+    debug target path "${TARGET_PATH}"
 }
 
 
@@ -31,9 +28,6 @@ parse_args() {
         case "${1:-}" in
             --default-name | --default-name=*)
                 DEFAULT_NAME=$(parse_param "$@") || shift $?
-                ;;
-            -D | --dry-run)
-                export DRY_RUN=0
                 ;;
             -[a-zA-Z][a-zA-Z]*)
                 local i="${1:-}"
