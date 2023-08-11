@@ -1,88 +1,52 @@
 #!/usr/bin/make -f
-SHELL := /bin/bash
+SHELL = /usr/bin/bash
 
+# Installation directories
+PKGDIR = .
+PKGDIR_ABS = $(realpath .)
+SRCDIR = $(PKGDIR)/src
+SRCDIR_ABS = $(PKGDIR_ABS)/src
+BUILDIR ?= $(PKGDIR)/build
+BUILDIR_ABS ?= $(PKGDIR_ABS)/build
+BINDIR ?= $(BUILDIR_ABS)
+DATADIR ?= $(BINDIR)
+TEMPDIR ?= $(SRCDIR_ABS)/tmp
+INSTALLATION_DIRS := $(BINDIR) $(DATADIR)
 
-#!/usr/bin/make -f
-SHELL := /bin/bash
-
-# Meta package
-package := bash_utils
-package_version := 1.0.0
-package_distname := $(package)-$(package_version)
-
-# Directories
-## Anchors
-srcdir = .
-abs_srcdir = $(realpath .)
-## Build
-buildir = $(srcdir)/build
-VPATH = src
-abs_buildir = $(abs_srcdir)/build
-built = $(buildir)
-## Distribute
-distdir = $(srcdir)/dist
-distribution = $(distdir)/$(package_distname)
-## Install
-DESTDIR ?=
-prefix = $(HOME)
-exec_prefix = $(prefix)
-bindir = $(prefix)/bin
-dirs := $(abs_buildir)
-
-sources = $(addprefix $(srcdir)/src/, \
-	crapp.sh \
-	filenames.sh \
-	new_subs.sh\
-)
-executables = $(addprefix $(buildir)/, \
-	crapp \
-	filenames \
-	new_subs\
-)
-
+# Macros
 MPP = /usr/bin/m4
-MPP_INCLUDES = -I $(srcdir)/src
-MPP_DEFINES = -D DATADIR='$(abs_srcdir)/src'
-MPPFLAGS = $(MPP_INCLUDES) $(MPP_DEFINES)
+MPP_INCLUDES =
+MPP_DEFINES =  -D __DATADIR__=$(DATADIR) -D __TEMPDIR__=$(TEMPDIR)
+MPP_MACROS = $(PKGDIR)/lib/macros.m4
+MPP_FLAGS = $(MPP_INCLUDES) $(MPP_DEFINES) $(PKGDIR)/lib/macros.m4
 
+# Programs
 
-INSTALL := /usr/bin/install
-.DEFAULT_GOAL := all
+# Sources
+VPATH := $(SRCDIR)
+EXECUTABLES = $(addprefix $(BUILDIR)/, $(basename crapp.sh))
+DATA = $(addprefix $(BUILDIR)/, $(basename filenames.sh new_subs.sh))
 
-all: install
+all: build
 
-run:
-	@echo run
+install: build
 
-.PHONY: build
-build: $(executables)
+build: $(EXECUTABLES) $(DATA)
 
-$(buildir)/%: %.sh | $(dirs)
-	$(MPP) $(MPPFLAGS) $< > $@
+$(EXECUTABLES): | $(INSTALLATION_DIRS)
+$(BUILDIR)/crapp: crapp.sh
+	$(MPP) $(MPP_FLAGS) $< > $@
 	chmod +x $@
 
-.PHONY: expand
-expand:
-	$(MPP) $(MPPFLAGS) $(MPPINCLUDE) $(srcdir)/src/testm42.sh $(srcdir)/src/testm4.sh
-
-.PHONY: install
-
-install: clean-install $(bindir)/crapp
-
-$(bindir)/crapp: src/crapp.sh
+$(BUILDIR)/%: %.sh
 	cat $< > $@
-	chmod +x $(bindir)/crapp
+	chmod +x $@
 
 clean:
-	-rm -rdf $(buildir)
+	-rm -rdf $(BUILDIR)
 
-clean-install:
-	-rm $(bindir)/crapp
+$(INSTALLATION_DIRS):
+	-mkdir -p $@
 
-.PHONY: test
-test:
-	@echo $(sources)
-	@echo $(SRC)
-
-$(dirs):
-	mkdir -p $@
+.DEFAULT_GOAL := all
+.PHONY: all build install clean

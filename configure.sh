@@ -1,44 +1,42 @@
 #!/usr/bin/env bash
 
-usage() {
-    cat <<EOF
-${0} is a software application scaffolding program.
-
-     It may be used to generate a single file, files or whole application
-     templates.
-EOF
-}
-
-trap 'exit 1' 10
-declare -g PROC=$$
-
-export PROCDIR=$(pwd)
-
 main() {
-    local -
-    set -o allexport
-    local DATADIR=__DATADIR__
-    local TEMPDIR=ifndef([__TEMPDIR__], [$(mktemp --directory --suffix=.crapp --tmpdir=/tmp)])
-    local TEMPLATESDIR=${DATADIR}/templates
-    local SUBCOMMANDSDIR=${DATADIR}/subcommands
-    local GENERATE_RANDOM_NAME=~/bin/gname
-    set +o allexport
-
-    ${DATADIR}/new_subs
     parse_args "$@"
     set -- "${POSARGS[@]}"
+    # Current location
+    local PKGDIR_ABS=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)
+    local PKGDIR="$(realpath --relative-to="." "$PKGDIR_ABS")"
+    local BINDIR=
+    local DATADIR=
+    local TEMPDIR=
+
+    if [ $DEV ]; then
+        BINDIR=${PKGDIR_ABS}/bin
+        DATADIR=${PKGDIR_ABS}
+        TEMPDIR=${PKGDIR_ABS}/tmp
+        LIBSDIR=${PKGDIR_ABS}/src
+    else
+        BINDIR='~/bin'
+        DATADIR='~/bin/crapp'
+        LIBSDIR='~/bin/crapp'
+        TEMPDIR='/tmp'
+    fi
+
+    m4 -D __PKGDIR_ABS__="$PKGDIR_ABS" \
+       -D __PKGDIR__="$PKGDIR" \
+       -D __BINDIR__="$BINDIR" \
+       -D __DATADIR__="$DATADIR" \
+       -D __TEMPDIR__="$TEMPDIR" \
+       ${PKGDIR}/lib/macros.m4 \
+       ${PKGDIR}/Makefile.in
 }
 
 parse_args() {
     declare -ga POSARGS=()
     while (($# > 0)); do
-        crapp-subcommands "$@" || break
         case "${1:-}" in
-            -l | --list)
-                LIST_TEMPLATES=0
-                ;;
-            -D | --dry-run)
-                DRY_RUN=0
+            --dev)
+                DEV=0
                 ;;
             -d | --debug)
                 export DEBUG=0
@@ -95,21 +93,17 @@ parse_param() {
     echo "${arg:-}"
     return $toshift
 }
-export -f parse_param
 
 fatal() {
     echo "$@" >&2
     kill -10 $$
     exit 1
 }
-export -f fatal
 
 debug() {
     [ ! $DEBUG ] && return
     echo debug: "$@" >&2
 }
-export -f debug
-
 
 
 main "$@"

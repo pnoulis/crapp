@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #!/usr/bin/env bash
 # changequote([,])
 # define([ifndef], [ifdef([$1], [$1], [define([$1], [$2])])])
@@ -31,3 +32,10 @@ define([gl_STRING_MODULE_INDICATOR], [GNULIB_]translit($1,[a-z],[A-Z]))
 
 gl_STRING_MODULE_INDICATOR('strlib') # -> GNULIB_strlib
 
+=======
+# ifndef([TEMPDIR], 'something')
+# ifelse(TEMPDIR, [yolo], 'its yolo', 'its not yolo')
+traceon
+TEMPDIR
+ifndef([TEMPDIR], 'yolo')
+>>>>>>> a21a201370b1372dda7264805bd72b1ae1f09d7b
