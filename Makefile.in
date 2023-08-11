@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+# Installation directories
+PKGDIR_ABS := __PKGDIR_ABS__
+PKGDIR := __PKGDIR__
+SRCDIR := $(PKGDIR)/src
+SRCDIR_ABS := $(PKGDIR_ABS)/src
+BINDIR := __BINDIR__
+DATADIR := __DATADIR__
+TEMPDIR := __TEMPDIR__
+TEMPLATESDIR := __DATADIR__/templates
+INSTALLATION_DIRS  := $(BINDIR) $(DATADIR) $(TEMPLATESDIR)
+
+# Sources
+VPATH := $(SRCDIR)
+EXECUTABLES = crapp.sh
+LIBS = filenames.sh new_subs.sh
+
+# Macros
+MPP = /usr/bin/m4
+MPP_INCLUDES =
+MPP_DEFINES =  -D [__TEMPLATESDIR__]=$(TEMPLATESDIR) -D [__TEMPDIR__]=$(TEMPDIR)
+MPP_MACROS = $(PKGDIR)/lib/macros.m4
+MPP_FLAGS = $(MPP_INCLUDES) $(MPP_DEFINES) $(PKGDIR)/lib/macros.m4
+
+
+
+
+

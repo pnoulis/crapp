@@ -1,48 +1,53 @@
 #!/usr/bin/make -f
-SHELL := /bin/bash
+SHELL = /usr/bin/bash
 
+# Installation directories
+PKGDIR = .
+PKGDIR_ABS = $(realpath .)
+SRCDIR = $(PKGDIR)/src
+SRCDIR_ABS = $(PKGDIR_ABS)/src
+BUILDIR ?= $(PKGDIR)/build
+BUILDIR_ABS ?= $(PKGDIR_ABS)/build
+BINDIR ?= $(BUILDIR_ABS)
+DATADIR ?= $(BINDIR)
+TEMPDIR ?= $(SRCDIR_ABS)/tmp
+INSTALLATION_DIRS := $(BINDIR) $(DATADIR)
 
-#!/usr/bin/make -f
-SHELL := /bin/bash
+# Macros
+MPP = /usr/bin/m4
+MPP_INCLUDES =
+MPP_DEFINES =  -D __DATADIR__=$(DATADIR) -D __TEMPDIR__=$(TEMPDIR)
+MPP_MACROS = $(PKGDIR)/lib/macros.m4
+MPP_FLAGS = $(MPP_INCLUDES) $(MPP_DEFINES) $(PKGDIR)/lib/macros.m4
 
-# Meta package
-package := bash_utils
-package_version := 1.0.0
-package_distname := $(package)-$(package_version)
+# Programs
 
-# Directories
-## Anchors
-srcdir = .
-abs_srcdir = $(realpath .)
-VPATH = src
-## Build
-buildir = $(srcdir)/build
-abs_buildir = $(abs_srcdir)/build
-built = $(buildir)
-## Distribute
-distdir = $(srcdir)/dist
-distribution = $(distdir)/$(package_distname)
-## Install
-DESTDIR ?=
-prefix = $(HOME)
-exec_prefix = $(prefix)
-bindir = $(prefix)/bin
+# Sources
+VPATH := $(SRCDIR)
+EXECUTABLES = $(addprefix $(BUILDIR)/, $(basename crapp.sh))
+DATA = $(addprefix $(BUILDIR)/, $(basename filenames.sh new_subs.sh))
 
-INSTALL := /usr/bin/install
-.DEFAULT_GOAL := all
+all: build
 
-all: install
+install: build
 
-run:
-	@echo run
+build: $(EXECUTABLES) $(DATA)
 
-.PHONY: install
+$(EXECUTABLES): | $(INSTALLATION_DIRS)
+$(BUILDIR)/crapp: crapp.sh
+	$(MPP) $(MPP_FLAGS) $< > $@
+	chmod +x $@
 
-install: clean-install $(bindir)/crapp
-
-$(bindir)/crapp: src/crapp.sh
+$(BUILDIR)/%: %.sh
 	cat $< > $@
-	chmod +x $(bindir)/crapp
+	chmod +x $@
 
-clean-install:
-	-rm $(bindir)/crapp
+clean:
+	-rm -rdf $(BUILDIR)
+
+$(INSTALLATION_DIRS):
+	-mkdir -p $@
+
+.DEFAULT_GOAL := all
+.PHONY: all build install clean
+
