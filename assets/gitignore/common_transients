@@ -1,6 +1,0 @@
-# Common Transient Directories and Files
-.env
-logs/
-*.log
-var/
-run/

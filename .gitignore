@@ -1,11 +1,15 @@
-# emacs autosave files
-.#*
 
-# emacs undo tree files
-*.~undo-tree~
+# emacs
+\#*\#
+*~
 
-# env
-.env*
+# vim
+:w
 
-# node modules
-/node_modules
+# vscode
+.vscode
+
+# intellij
+.idea
+
+tmp/
