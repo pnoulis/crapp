@@ -15,6 +15,7 @@ SORT									 = /usr/bin/sort
 CP										 = /usr/bin/cp
 RM										 = /usr/bin/rm
 CHMOD									 = /usr/bin/chmod
+MPP										 = /usr/bin/m4
 
 # Interpreters and compilers
 INTERPRETER            = $(SHELL)
@@ -35,6 +36,7 @@ DOTENV				         = ~/bin/dotenv
 PKGDIR								 = .
 PKGDIR_ABS						 = $(shell pwd)
 SRCDIR								 = $(PKGDIR)/src
+SRCDIR_ABS						 = $(PKGDIR_ABS)/src
 TESTDIR								 = $(PKGDIR)/tests
 DOCSDIR								 = $(PKGDIR)/docs
 CONFDIR								 = $(PKGDIR)/config
@@ -43,8 +45,8 @@ BUILDIR								 = $(PKGDIR)/build
 ENVDIRS								 = $(PKGDIR)/config/env $(PKGDIR)
 
 # Root of the module dependency graph
-ENTRY_POINT_BASENAME	 = index.js
-ENTRY_POINT						 = $(SRCDIR)/index.js
+ENTRY_POINT_BASENAME	 =
+ENTRY_POINT						 = $(SRCDIR)/
 
 # ENVIRONMENT VARIABLES
 ENVARS =
@@ -64,6 +66,12 @@ run-entry: mode ?= 'development'
 run-entry:
 	$(INTERPRETER) $(ENTRY_POINT)
 
+# ------------------------------ CLEAN ------------------------------ #
+.PHONY: clean distclean
+
+clean:
+
+distclean:
 
 # ------------------------------ ENV ------------------------------ #
 .PHONY: env env-dry

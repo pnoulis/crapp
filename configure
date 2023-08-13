@@ -10,6 +10,9 @@ main() {
     local DATADIR=
     local TEMPDIR=
 
+    cd $PKGDIR_ABS
+    make distclean
+
     if [ $DEV ]; then
         MODE='dev'
         BINDIR=${PKGDIR_ABS}
@@ -18,7 +21,7 @@ main() {
         LIBSDIR=${PKGDIR_ABS}/src
     else
         BINDIR='~/bin'
-        DATADIR='~/bin/crapp'
+        DATADIR='~/.local/share/crapp'
         LIBSDIR='~/bin/crapp'
         TEMPDIR='/tmp'
     fi

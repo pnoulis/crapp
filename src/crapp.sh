@@ -44,6 +44,7 @@ crapp() {
         find $TARGET_DIRNAME -mindepth 1
         echo '------------------------------'
     }
+    echo ${subargs[0]} $TARGET_PATH
 }
 
 parse_crapp_args() {

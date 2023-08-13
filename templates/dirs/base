@@ -21,4 +21,3 @@ mkdir -p scripts
 }
 
 popd >/dev/null
-exit 0

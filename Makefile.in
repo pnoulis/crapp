@@ -39,6 +39,17 @@ MPP_FLAGS = $(MPP_INCLUDES) $(MPP_DEFINES) $(MPP_MACROS)
 .DEFAULT_GOAL := all
 all: build
 
+
+install: build
+	cp -f $(EXECUTABLE) $(BINDIR)/$(EXECUTABLE)
+	chmod +x $(BINDIR)/$(EXECUTABLE)
+	mkdir -p $(TEMPLATESROOTDIR)
+	cp -r templates/* $(TEMPLATESROOTDIR)
+
+uninstall:
+	@printf "'%s'\n" 'rm -irdf $(BINDIR)/$(EXECUTABLE)'
+	@printf "'%s'\n" 'rm -irdf $(TEMPLATESROOTDIR)'
+
 build: $(EXECUTABLE)
 
 $(EXECUTABLE): $(MPP_MACROS) $(OBJS)
