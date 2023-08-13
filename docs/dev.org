@@ -158,10 +158,8 @@ CLOSED: [2023-08-10 Thu 11:37]
 CLOSED: [2023-08-10 Thu 11:37]
 
 
-
-
 ** DONE move and test makefile
-CLOSED: [2023-08-10 Thu 12:14]
+CLOSED: [2023-08-12 Sat 21:22]
 *** DONE change the dir prefix
 CLOSED: [2023-08-10 Thu 12:14]
 *** DONE assign a default value of base for the template target
@@ -216,7 +214,8 @@ CLOSED: [2023-08-10 Thu 13:37]
 *** DONE generate
 CLOSED: [2023-08-10 Thu 13:37]
 
-** TODO move and test app  checklist
+** DONE move and test app  checklist
+CLOSED: [2023-08-12 Sat 21:05]
 *** change the dir prefix
 *** assign a default value of base for the template target
 *** assign a default filename for those templates that produce files
@@ -227,6 +226,13 @@ CLOSED: [2023-08-10 Thu 13:37]
 *** generate
 
 * Filename parsing
-the filename parser uses the algorithm:
+* Installation variables
+* test the dirs template
 
-1. If two argument have been provided
+** Test 1
+The dirs template output should be moved to the path specified by the last
+positional parameter to the template.
+
+
+* Some templates create files
+* Some templates create directory hierarchies

@@ -1,44 +1,64 @@
 #!/usr/bin/env bash
 
 usage() {
-    cat <<EOF
-${0} is a software application scaffolding program.
-
-     It may be used to generate a single file, files or whole application
-     templates.
+    cat<<EOF
+${0}: Project or file scaffolding generator through templates
 EOF
 }
 
 trap 'exit 1' 10
+set -o errexit
 declare -g PROC=$$
+PROCDIR=$(pwd)
 
-export PROCDIR=$(pwd)
-
-main() {
+crapp() {
     local -
-    set -o allexport
-    local DATADIR=__DATADIR__
-    local TEMPDIR=ifndef([__TEMPDIR__], [$(mktemp --directory --suffix=.crapp --tmpdir=/tmp)])
-    local TEMPLATESDIR=${DATADIR}/templates
-    local SUBCOMMANDSDIR=${DATADIR}/subcommands
-    local GENERATE_RANDOM_NAME=~/bin/gname
-    set +o allexport
-
-    ${DATADIR}/new_subs
-    parse_args "$@"
+    parse_crapp_args "$@"
     set -- "${POSARGS[@]}"
+    [ ! $TMPKEEP ] && rm -rdf ${CRAPPTEMPDIR}/[.a-zA-Z_]*
+    debug TEMPLATESROOTDIR $(quote $TEMPLATESROOTDIR)
+    debug TEMPDIR $(quote $TEMPDIR)
+    debug CRAPPTEMPDIR $(quote $CRAPPTEMPDIR)
+    debug CRAPP $(quote $CRAPP)
+    export TEMPLATESDIR=${TEMPLATESROOTDIR}/${subargs[0]}
+    if [[ $LIST_TEMPLATES == 1 ]]; then
+        for i in "${subs[@]}"; do
+            echo "$i"
+        done
+        exit 0
+    elif [[ $LIST_TEMPLATES == 2 ]]; then
+        if (( ! ${#subargs[@]} )); then
+            fatal Failed to specify template to -ll
+        fi
+        find $TEMPLATESDIR -mindepth 1 -printf "%f\n"
+        exit 0
+    fi
+    debug call: $(quote ${TEMPLATESDIR}/${subargs[0]}.sh ${subargs[@]:1})
+    if [ ! -e ${TEMPLATESDIR}/${subargs[0]}.sh ]; then
+        fatal Missing template script
+    fi
+    mkdir -p $CRAPPTEMPDIR
+    source ${TEMPLATESDIR}/${subargs[0]}.sh "${subargs[@]:1}"
+    [ $DEBUG ] && {
+        echo '------------------------------'
+        find $TARGET_DIRNAME -mindepth 1
+        echo '------------------------------'
+    }
 }
 
-parse_args() {
+parse_crapp_args() {
     declare -ga POSARGS=()
     while (($# > 0)); do
         crapp-subcommands "$@" || break
         case "${1:-}" in
+            --tmpkeep)
+                TMPKEEP=0
+                ;;
             -l | --list)
-                LIST_TEMPLATES=0
+                ((LIST_TEMPLATES += 1))
                 ;;
             -D | --dry-run)
-                DRY_RUN=0
+                export DRY_RUN=0
                 ;;
             -d | --debug)
                 export DEBUG=0
@@ -73,43 +93,8 @@ parse_args() {
     done
 }
 
-parse_param() {
-    local param arg
-    local -i toshift=0
-
-    if (($# == 0)); then
-        return $toshift
-    elif [[ "$1" =~ .*=.* ]]; then
-        param="${1%%=*}"
-        arg="${1#*=}"
-    elif [[ "${2-}" =~ ^[^-].+ ]]; then
-        param="$1"
-        arg="$2"
-        ((toshift++))
-    fi
-
-    if [[ -z "${arg-}" && ! "${OPTIONAL-}" ]]; then
-        fatal "${param:-$1} requires an argument"
-    fi
-
-    echo "${arg:-}"
-    return $toshift
-}
-export -f parse_param
-
-fatal() {
-    echo "$@" >&2
-    kill -10 $$
-    exit 1
-}
-export -f fatal
-
-debug() {
-    [ ! $DEBUG ] && return
-    echo debug: "$@" >&2
-}
-export -f debug
-
-
-
-main "$@"
+include(common)
+include(config)
+include(filenames)
+include(subcommands)
+crapp "$@"

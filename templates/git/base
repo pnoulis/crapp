@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+base() {
+    $CRAPP --tmpkeep git --template gitignore/base .
+    $CRAPP --tmpkeep git --append --template gitattributes/base .
+}
+base

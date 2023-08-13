@@ -1,52 +1,66 @@
 #!/usr/bin/make -f
-SHELL = /usr/bin/bash
+
+# Package
+PKG_VERSION=0.0.1
+PKG_VVERSION=v$(PKG_VERSION)
 
 # Installation directories
-PKGDIR = .
-PKGDIR_ABS = $(realpath .)
-SRCDIR = $(PKGDIR)/src
-SRCDIR_ABS = $(PKGDIR_ABS)/src
-BUILDIR ?= $(PKGDIR)/build
-BUILDIR_ABS ?= $(PKGDIR_ABS)/build
-BINDIR ?= $(BUILDIR_ABS)
-DATADIR ?= $(BINDIR)
-TEMPDIR ?= $(SRCDIR_ABS)/tmp
-INSTALLATION_DIRS := $(BINDIR) $(DATADIR)
+PKGDIR_ABS := /home/pnoul/dev/pp/crapp
+PKGDIR := .
+SRCDIR := $(PKGDIR)/src
+SRCDIR_ABS := $(PKGDIR_ABS)/src
+BINDIR := /home/pnoul/dev/pp/crapp
+DATADIR := /home/pnoul/dev/pp/crapp
+TEMPDIR := /home/pnoul/dev/pp/crapp/tmp
 
-# Macros
-MPP = /usr/bin/m4
-MPP_INCLUDES =
-MPP_DEFINES =  -D __DATADIR__=$(DATADIR) -D __TEMPDIR__=$(TEMPDIR)
-MPP_MACROS = $(PKGDIR)/lib/macros.m4
-MPP_FLAGS = $(MPP_INCLUDES) $(MPP_DEFINES) $(PKGDIR)/lib/macros.m4
-
-# Programs
+# Devired directories
+TEMPLATESROOTDIR = /home/pnoul/dev/pp/crapp/templates
+MACROSDIR = $(PKGDIR)/lib
+INSTALLATION_DIRS  = $(BINDIR) $(DATADIR) $(TEMPLATESROOTDIR)
 
 # Sources
-VPATH := $(SRCDIR)
-EXECUTABLES = $(addprefix $(BUILDIR)/, $(basename crapp.sh))
-DATA = $(addprefix $(BUILDIR)/, $(basename filenames.sh new_subs.sh))
+VPATH := $(SRCDIR) $(MACROSDIR)
+EXECUTABLE = crapp
+CRAPP := $(BINDIR)/$(EXECUTABLE)
+OBJS = $(addprefix $(SRCDIR)/, config common filenames subcommands crapp)
 
-all: build
+# Macro
+MPP = /usr/bin/m4
+MPP_INCLUDES = -I $(SRCDIR)
+MPP_DEFINES =  -D __TEMPLATESROOTDIR__=$(TEMPLATESROOTDIR) \
+	-D __TEMPDIR__=$(TEMPDIR) \
+	-D __CRAPP__=$(CRAPP) \
+	-D __VERSION__=$(PKG_VVERSION) \
 
-install: build
+MPP_MACROS = macros
+MPP_FLAGS = $(MPP_INCLUDES) $(MPP_DEFINES) $(MPP_MACROS)
 
-build: $(EXECUTABLES) $(DATA)
-
-$(EXECUTABLES): | $(INSTALLATION_DIRS)
-$(BUILDIR)/crapp: crapp.sh
-	$(MPP) $(MPP_FLAGS) $< > $@
-	chmod +x $@
-
-$(BUILDIR)/%: %.sh
-	cat $< > $@
-	chmod +x $@
-
-clean:
-	-rm -rdf $(BUILDIR)
-
-$(INSTALLATION_DIRS):
-	-mkdir -p $@
 
 .DEFAULT_GOAL := all
-.PHONY: all build install clean
+all: build
+
+build: $(EXECUTABLE)
+
+$(EXECUTABLE): $(MPP_MACROS) $(OBJS)
+	$(MPP) $(MPP_FLAGS) $(SRCDIR)/crapp > $@
+	chmod +x $@
+
+# Objects
+$(SRCDIR)/%: %.sh
+	$(MPP) $(MPP_FLAGS) $< > $@
+
+$(MPP_MACROS): $(MACROSDIR)/*.m4
+	cp -f $< $@
+
+clean:
+	-rm -f $(OBJS)
+	-rm -f $(EXECUTABLE)
+	-rm -f $(MPP_MACROS)
+
+distclean: clean
+	-rm -f $(PKGDIR)/Makefile
+
+test:
+	@echo $(MPP_DEFINES)
+
+.PHONY: all install build clean distclean test
