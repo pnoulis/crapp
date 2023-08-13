@@ -1,0 +1,13 @@
+
+# emacs
+\#*\#
+*~
+
+# vim
+:w
+
+# vscode
+.vscode
+
+# intellij
+.idea

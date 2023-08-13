@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+mkdir -p $TARGET_PATH
+pushd $TARGET_PATH >/dev/null
+
+mkdir -p src
+mkdir -p tests
+mkdir -p tmp
+mkdir -p config/env
+mkdir -p docs
+mkdir -p scripts
+
+[ $GITKEEP ] && {
+    touch src/.gitkeep
+    touch tests/.gitkeep
+    touch config/.gitkeep
+    touch config/env/.gitkeep
+    touch docs/.gitkeep
+    touch tmp/.gitkeep
+    touch scripts/.gitkeep
+}
+
+popd >/dev/null

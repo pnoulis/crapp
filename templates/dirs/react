@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+mkdir -p $TARGET_PATH
+pushd $TARGET_PATH >/dev/null
+
+$CRAPP --tmpkeep dirs --template base $TARGET_BASENAME ../
+
+# react dirs
+mkdir -p src/{hooks,components,services,pages,app,contexts,loaders,scratch}
+mkdir -p assets/{backgrounds,brand,fonts,icons}
+mkdir -p public/fonts
+
+[ $GITKEEP ] && {
+    touch src/{hooks,components,services,pages,app,contexts,loaders,scratch}/.gitkeep
+    touch assets/{backgrounds,brand,fonts,icons}/.gitkeep
+    touch public/fonts/.gitkeep
+}
+
+popd >/dev/null
+exit 0

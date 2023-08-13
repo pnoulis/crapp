@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+$CRAPP --tmpkeep git --template gitignore/emacs .
+$CRAPP --tmpkeep git --append --template gitignore/vim .
+$CRAPP --tmpkeep git --append --template gitignore/vscode .
+$CRAPP --tmpkeep git --append --template gitignore/intellij .
+
+exit 0

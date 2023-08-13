@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+mkdir -p $TARGET_PATH
+pushd $TARGET_PATH >/dev/null
+$CRAPP --tmpkeep git --template gitignore/base .
+$CRAPP --tmpkeep git --template gitattributes/base
+popd >/dev/null
+exit 0
