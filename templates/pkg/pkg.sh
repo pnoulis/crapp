@@ -17,15 +17,19 @@ main() {
     filenames --default-name="$DEFAULT_TARGET_NAME" "$@"
     debug scaffolding pkg template $(quote $TEMPLATE)
 
-    if [ -x $TEMPLATE_FILEPATH ]; then
+    pushd $TARGET_DIRNAME >/dev/null
+    if [ $DRY_RUN ]; then
+        cat $TEMPLATE_FILEPATH
+    elif [ -x $TEMPLATE_FILEPATH ]; then
         ${TEMPLATE_FILEPATH}
     elif [ $DRY_RUN ]; then
         cat $TEMPLATE_FILEPATH
     elif [ $APPEND ]; then
         cat $TEMPLATE_FILEPATH >> $TARGET_BASENAME
     else
-        cp $TEMPLATE_FILEPATH $TARGET_BASENAME
+        cp $TEMPLATE_FILEPATH >> $TARGET_BASENAME
     fi
+    popd >/dev/null
 }
 
 parse_args() {
@@ -33,43 +37,43 @@ parse_args() {
     while (($# > 0)); do
         case "${1:-}" in
             --pkg-name | --pkg-name=*)
-                PKG_NAME="$(parse_param "$@")" || shift $?
+                export PKG_NAME="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-version | --pkg-version=*)
-                PKG_VERSION="$(parse_param "$@")" || shift $?
+                export PKG_VERSION="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-summary | --pkg-summary=*)
-                PKG_SUMMARY="$(parse_param "$@")" || shift $?
+                export PKG_SUMMARY="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-keywords | --pkg-keywords=*)
-                PKG_KEYWORDS="$(parse_param "$@")" || shift $?
+                export PKG_KEYWORDS="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-author | --pkg-author=*)
-                PKG_AUTHOR="$(parse_param "$@")" || shift $?
+                export PKG_AUTHOR="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-author-email | --pkg-author-email=*)
-                PKG_EMAIL="$(parse_param "$@")" || shift $?
+                export PKG_EMAIL="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-repo | --pkg-repo=*)
-                PKG_REPO="$(parse_param "$@")" || shift $?
+                export PKG_REPO="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-homepage | --pkg-homepage=*)
-                PKG_EMAIL="$(parse_param "$@")" || shift $?
+                export PKG_EMAIL="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-bugreport | --pkg-bugreport=*)
-                PKG_BUGREPORT="$(parse_param "$@")" || shift $?
+                export PKG_BUGREPORT="$(parse_param "$@")" || shift $?
                 ;;
             --pkg-docs | --pkg-docs=*)
-                PKG_DOCS="$(parse_param "$@")" || shift $?
+                export PKG_DOCS="$(parse_param "$@")" || shift $?
                 ;;
             -t | --template)
                 TEMPLATE=$(OPTIONAL=0 parse_param "$@") || shift $?
                 ;;
             -a | --append)
-                export APPEND=0
+                APPEND=0
                 ;;
             -D | --dry-run)
-                export DRY_RUN=0
+                 DRY_RUN=0
                 ;;
             -h | --help)
                 usage

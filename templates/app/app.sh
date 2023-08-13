@@ -23,7 +23,6 @@ main() {
     else
         fatal $(quote "$TEMPLATE_FILEPATH") is not an executable file
     fi
-    exit 0
 }
 
 parse_args() {
@@ -65,6 +64,9 @@ parse_args() {
                 ;;
             -D | --dry-run)
                 export DRY_RUN=0
+                ;;
+            --git-init)
+                export GIT_INIT=0
                 ;;
             -h | --help)
                 usage

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-base() {
-    mkdir -p config/env
-    touch config/env/env.default
-    touch config/env/env.development
-    touch config/env/env.testing
-    touch config/env/env.production
-    touch .env.default.local
-    touch .env.development.local
-    touch .env.testing.local
-    touch .env.production.local
-}
-base
+mkdir -p $TARGET_PATH
+pushd ${TARGET_PATH} >/dev/null
+mkdir -p config/env
+touch config/env/env.default
+touch config/env/env.development
+touch config/env/env.testing
+touch config/env/env.production
+touch .env.default.local
+touch .env.development.local
+touch .env.testing.local
+touch .env.production.local
+popd >/dev/null
+exit 0

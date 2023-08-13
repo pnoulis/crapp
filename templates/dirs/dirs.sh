@@ -18,15 +18,15 @@ main() {
         exit 0
     }
     filenames --default-name="$DEFAULT_TARGET_NAME" "$@"
-
     debug scaffolding dirs template $(quote $TEMPLATE)
-    pushd $TARGET_DIRNAME >/dev/null
-    if [ -x $TEMPLATE_FILEPATH ]; then
+
+    if [ $DRY_RUN ]; then
+        cat $TEMPLATE_FILEPATH
+    elif [ -x $TEMPLATE_FILEPATH ]; then
         ${TEMPLATE_FILEPATH}
     else
         fatal $(quote "$TEMPLATE_FILEPATH") is not an executable file
     fi
-    popd >/dev/null
 }
 
 parse_args() {

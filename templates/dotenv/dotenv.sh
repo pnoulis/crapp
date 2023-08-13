@@ -21,9 +21,8 @@ main() {
     elif [ -x $TEMPLATE_FILEPATH ]; then
         ${TEMPLATE_FILEPATH}
     else
-        cp $TEMPLATE_FILEPATH $TARGET_BASENAME
+        fatal $(quote "$TEMPLATE_FILEPATH") is not an executable file
     fi
-    exit 0
 }
 
 parse_args() {

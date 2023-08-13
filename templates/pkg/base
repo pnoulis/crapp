@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-base() {
-    local PKG_NAME=${PKG_NAME:-$(gname)}
-    local PKG_VERSION=${PKG_VERSION:-0.0.1}
-    local PKG_AUTHOR=${PKG_AUTHOR:-$(git config --get user.name)}
-    local PKG_AUTHOR_EMAIL=$(git config --get user.email)
-    local PKG_AUTHOR_REPO=${PKG_AUTHOR_REPO:-https://github.com/$PKG_AUTHOR}
-    local PKG_REPO=${PKG_REPO:-$PKG_AUTHOR_REPO}
+PKG_NAME=${PKG_NAME:-$(gname)}
+PKG_VERSION=${PKG_VERSION:-0.0.1}
+PKG_AUTHOR=${PKG_AUTHOR:-$(git config --get user.name)}
+PKG_AUTHOR_EMAIL=$(git config --get user.email)
+PKG_AUTHOR_REPO=${PKG_AUTHOR_REPO:-https://github.com/$PKG_AUTHOR}
+PKG_REPO=${PKG_REPO:-$PKG_AUTHOR_REPO}
 
-    pkg=$(
-        cat <<EOF
+pkg=$(
+    cat <<EOF
 PKG_NAME=${PKG_NAME}
 PKG_AUTHOR=${PKG_AUTHOR}
 PKG_AUTHOR_EMAIL=${PKG_AUTHOR_EMAIL}
@@ -24,17 +23,10 @@ PKG_HOMEPAGE=${PKG_HOMEPAGE:-${PKG_REPO}/${PKG_NAME}/#readme}
 PKG_BUGREPORT=${PKG_BUGREPORT:-${PKG_REPO}/${PKG_NAME}/issues}
 PKG_DOCS=${PKG_DOCS:-${PKG_REPO}/${PKG_NAME}/#readme}
 EOF
-       )
+   )
 
-    [ $DRY_RUN ] && {
-        for i in "$pkg"; do
-            echo "$i"
-        done
-        exit 0
-    }
+for i in "$pkg"; do
+    echo "$i" >> $TARGET_BASENAME
+done
 
-    for i in "$pkg"; do
-        echo "$i" >> $TARGET_BASENAME
-    done
-}
-base
+exit 0

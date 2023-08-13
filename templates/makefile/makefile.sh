@@ -14,8 +14,8 @@ main() {
     }
 
     filenames --default-name="$DEFAULT_TARGET_NAME" "$@"
-
     debug scaffolding makefile template $(quote $TEMPLATE)
+
     if [ -x $TEMPLATE_FILEPATH ]; then
         ${TEMPLATE_FILEPATH}
     elif [ $DRY_RUN ]; then

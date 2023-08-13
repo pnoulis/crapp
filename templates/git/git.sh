@@ -33,11 +33,10 @@ main() {
     elif [ -x $TEMPLATE_FILEPATH ]; then
         ${TEMPLATE_FILEPATH}
     elif [ $APPEND ]; then
-        cat $TEMPLATE_FILEPATH >> $TARGET_BASENAME
+        cat $TEMPLATE_FILEPATH >> ${TARGET_DIRNAME}/$TARGET_BASENAME
     else
-        cp $TEMPLATE_FILEPATH $TARGET_BASENAME
+        cp $TEMPLATE_FILEPATH ${TARGET_DIRNAME}/$TARGET_BASENAME
     fi
-    exit 0
 }
 
 parse_args() {

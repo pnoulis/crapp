@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-base() {
-    $CRAPP --tmpkeep git --template gitignore/transient .
-    $CRAPP --tmpkeep git --template gitignore/editors .
-}
-base
+$CRAPP --tmpkeep git --template gitignore/transient .
+$CRAPP --tmpkeep git --template gitignore/editors .
+
+exit 0

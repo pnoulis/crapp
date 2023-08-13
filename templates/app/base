@@ -1,26 +1,31 @@
 #!/usr/bin/env bash
 
-base() {
-    # Need a directory tree
-    $CRAPP --tmpkeep dirs --gitkeep --template base .
-    # Need a PACKAGE file
-    $CRAPP --tmpkeep pkg --template base .
-    # Need a README file
-    $CRAPP --tmpkeep readme --template base .
-    # Need an .editorconfig
-    $CRAPP --tmpkeep editorconfig --template base .
-    # Need a .gitignore and .gitattributes
-    $CRAPP --tmpkeep git --template base .
-    # Need environments
-    $CRAPP --tmpkeep dotenv --template base .
-    # Need a Makefile
-    $CRAPP --tmpkeep makefile --template base .
-    # Need a .projectile
-    touch .projectile
-    # # Initialize git
-    # git init
-    # git add .
-    # git config --local init.defaultBranch master
-    # git commit -m 'Initial commit'
-}
-base
+mkdir -p $TARGET_PATH
+pushd ${TARGET_PATH} >/dev/null
+# Need a directory tree
+$CRAPP --tmpkeep dirs --gitkeep --template base $TARGET_BASENAME .
+# Need a PACKAGE file
+$CRAPP --tmpkeep pkg --template base .
+# Need a README file
+$CRAPP --tmpkeep readme --template base .
+# Need an .editorconfig
+$CRAPP --tmpkeep editorconfig --template base .
+# Need a .gitignore and .gitattributes
+$CRAPP --tmpkeep git --template base $TARGET_BASENAME .
+# Need environments
+$CRAPP --tmpkeep dotenv --template base $TARGET_BASENAME .
+# Need a Makefile
+$CRAPP --tmpkeep makefile --template base .
+# Need a .projectile
+touch .projectile
+
+if [ $GIT_INIT ]; then
+   # Initialize git
+   git init
+   git add .
+   git config --local init.defaultBranch master
+   git commit -m 'Initial commit'
+fi
+popd >/dev/null
+
+exit 0

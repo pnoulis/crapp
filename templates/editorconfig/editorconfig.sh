@@ -14,8 +14,8 @@ main() {
     }
 
     filenames --default-name="$DEFAULT_TARGET_NAME" "$@"
-
     debug scaffolding editorconfig template $(quote $TEMPLATE)
+    pushd $TARGET_DIRNAME >/dev/null
     if [ -x $TEMPLATE_FILEPATH ]; then
         ${TEMPLATE_FILEPATH}
     elif [ $DRY_RUN ]; then
@@ -25,7 +25,7 @@ main() {
     else
         cp $TEMPLATE_FILEPATH $TARGET_BASENAME
     fi
-    exit 0
+    popd >/dev/null
 }
 
 parse_args() {

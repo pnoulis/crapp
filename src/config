@@ -1,0 +1,9 @@
+export TEMPLATESROOTDIR=/home/pnoul/dev/pp/crapp/templates
+export TEMPDIR=/home/pnoul/dev/pp/crapp/tmp
+export CRAPPTEMPDIR=/home/pnoul/dev/pp/crapp/tmp/crapp
+
+# crapp is needed in $PATH by templates
+# In production that is not problem since
+# the program is expected to have been installed
+# But in development it is
+export CRAPP=/home/pnoul/dev/pp/crapp/crapp

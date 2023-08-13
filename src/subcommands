@@ -1,6 +1,10 @@
 declare -a subargs=()
 declare -a subs=(
     # languages
+    html
+    bash
+    js
+    python
     # tools
     makefile
     readme
