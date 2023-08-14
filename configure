@@ -11,7 +11,14 @@ main() {
     local TEMPDIR=
 
     cd $PKGDIR_ABS
-    make distclean
+
+    # If srcdir has been build, running ./configure will produce a new Makefile
+    # but if one were to 'make install' prior to a 'make distclean', it would
+    # result in make install not building the sources if they had been already
+    # build, which would result in an old stale copy of the program in the
+    # system. Therefore If srcdir has been build the best course of action is to
+    # have it run distclean prior to re-configuring the project.
+    [ -e Makefile ] && make distclean
 
     if [ $DEV ]; then
         MODE='dev'
