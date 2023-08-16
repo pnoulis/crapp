@@ -35,7 +35,7 @@ crapp() {
     fi
     debug call: $(quote ${TEMPLATESDIR}/${subargs[0]}.sh ${subargs[@]:1})
     if [ ! -e ${TEMPLATESDIR}/${subargs[0]}.sh ]; then
-        fatal Missing template script
+        fatal Missing template script $(quote "${TEMPLATESDIR}/${subargs[0]}.sh")
     fi
     mkdir -p $CRAPPTEMPDIR
     source ${TEMPLATESDIR}/${subargs[0]}.sh "${subargs[@]:1}"
