@@ -21,9 +21,9 @@ main() {
     elif [ $DRY_RUN ]; then
         cat $TEMPLATE_FILEPATH
     elif [ $APPEND ]; then
-        cat $TEMPLATE_FILEPATH >> $TARGET_BASENAME.js
+        cat $TEMPLATE_FILEPATH >> $TARGET_BASENAME
     else
-        cp $TEMPLATE_FILEPATH $TARGET_BASENAME.js
+        cp $TEMPLATE_FILEPATH $TARGET_BASENAME
     fi
     popd >/dev/null
 }
