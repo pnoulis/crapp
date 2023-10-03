@@ -19,13 +19,17 @@ $CRAPP --tmpkeep makefile --template base .
 # Need a .projectile
 touch .projectile
 
-if [ $GIT_INIT ]; then
-   # Initialize git
-   git init
-   git add .
-   git config --local init.defaultBranch master
-   git commit -m 'Initial commit'
-fi
+git init
+git add .
+git config --local init.defaultBranch master
+git commit -m 'Initial commit'
+# if [ $GIT_INIT ]; then
+#    # Initialize git
+#    git init
+#    git add .
+#    git config --local init.defaultBranch master
+#    git commit -m 'Initial commit'
+# fi
 popd >/dev/null
 
 exit 0

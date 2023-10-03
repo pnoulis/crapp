@@ -1,94 +1,228 @@
 #!/usr/bin/make
 
-#	The shell that is going to execute the recipies.
-SHELL									 = /usr/bin/bash
-#	Backtrack changes so that the directory tree does not
-#	contain incomplete changes.
-.DELETE_OR_ERROR:
-#	Default target to run against.
-.DEFAULT_GOAL	         := all
+SHELL:=/usr/bin/bash
+# errexit -> An exception halts recipe execution
+# pipefail -> The whole pipeline fails when any of its parts exits with a
+# non-zero status code.
+# -o nounset -> Treat unset variables and parameters as an error
+.SHELLFLAGS:=-o errexit -o pipefail -c -o nounset
+.DEFAULT_GOAL:=all
+# Backtrack changes in case of an exception
+.DELETE_ON_ERROR:
+# By default export all variables to child processes.
+.EXPORT_ALL_VARIABLES:
+# Re-evaluate designated $$variables in prerequisites
+.SECONDEXPANSION:
+# Recipe lines all make use of the same shell process instance.
+.ONESHELL:
 
-#	System programs
-INSTALL								 = /usr/bin/install
-MKDIRP								 = /usr/bin/mkdir -p
-SORT									 = /usr/bin/sort
-CP										 = /usr/bin/cp
-RM										 = /usr/bin/rm
-CHMOD									 = /usr/bin/chmod
-MPP										 = /usr/bin/m4
+# Specials symbols
+comma:=,
+empty:=
+space:= $(empty) $(empty)
+squote:=$(shell echo "'")
+dquote:=$(shell echo '"')
 
-# Interpreters and compilers
-INTERPRETER            = $(SHELL)
-COMPILER               =
+# Environment
+ifneq ($(mode),)
+MODE:=$(mode)
+else
+MODE?=production
+endif
 
-# Language package manager programs
-TESTER								 =
-LINTER								 =
-FORMATER							 =
-PRETTY_OUTPUT					 =
+# App
+app_name:=
+app_version:=
+app_vversion:=
 
-# 3rd party libraries / programs
+# App directories
+appdir:=.
+appdir_abs:=$(realpath $(appdir))
+buildir:=$(appdir)/build
+confdir:=$(appdir)/config
 
-#	Self developed libraries / programs
-DOTENV				         = ~/bin/dotenv
+# Tools
+install=/usr/bin/install
+mkdirp:=/usr/bin/mkdir -p
+sort:=/usr/bin/sort
+cp:=/usr/bin/cp
+rm:=/usr/bin/rm
+chmod:=/usr/bin/chmod
+mpp:=/usr/bin/m4
+interpreter:=$(SHELL)
+compiler:=
+tester:=
+linter:=
+formatter:=
+pretty_output:=
+dotenv:=/home/pnoul/bin/dotenv
+dotenvdirs:= $(confdir)/env
+dotenvflags:=--mode=$(MODE)
+dotenvfile:= $(appdir)/.env
+loadenv:=set -a; source ./.env
+rclone:=/usr/bin/rclone
+rclonerc:=$(appdir)/config/rclone/rclone.conf
+rcloneflags:=--config $(rclonerc)
+rclone_gdrive:=gdrive:
 
-#	Dirs
-PKGDIR								 = .
-PKGDIR_ABS						 = $(shell pwd)
-SRCDIR								 = $(PKGDIR)/src
-SRCDIR_ABS						 = $(PKGDIR_ABS)/src
-TESTDIR								 = $(PKGDIR)/tests
-DOCSDIR								 = $(PKGDIR)/docs
-CONFDIR								 = $(PKGDIR)/config
-TEMPDIR								 = $(PKGDIR)/tmp
-BUILDIR								 = $(PKGDIR)/build
-ENVDIRS								 = $(PKGDIR)/config/env $(PKGDIR)
+# Metadata
+timestamp:=$(shell date +%s)
+date:=$(shell date --date=@$(timestamp))
+date_path_safe:=$(shell date --date=@$(timestamp) +%y-%m-%d-%H-%M-%S)
+git_author:=$(shell git config --get user.name)
+git_author_email:=$(shell git config --get user.email)
+git_branch:=$(shell git branch --show-current)
+git_commit:=$(shell git rev-parse --short HEAD)
+ifneq ($(strip $(shell git status --porcelain)),)
+git_status:=dirty
+else
+git_status:=clean
+endif
+user:=$(shell id --name --user)
+hostname:=$(shell hostname)
 
-# Root of the module dependency graph
-ENTRY_POINT_BASENAME	 =
-ENTRY_POINT						 = $(SRCDIR)/
+# Metafiles
+releasefile:=RELEASE
+changelogfile:=CHANGELOG
+readmefile:=README.md
+metafiles:=$(releasefile) $(changelogfile) $(readmefile)
 
-# ENVIRONMENT VARIABLES
-ENVARS =
+# Distribute
+distsrc_basename:=$(app_name)-$(app_vversion)+src.$(git_author).$(date_path_safe)
+distbin_basename:=$(app_name)-$(app_vversion)+bin.$(git_author).$(date_path_safe)
+distsrc:=$(appdir)/$(distsrc_basename)
+distbin:=$(appdir)/$(distbin_basename)
+archive?=tar.gz # User defined
+dist_target:= # Target defined
+dist_basename:= # Target defined
+distribution:= # Target defined
 
-.PHONY: all
-all: run
+all: build
 
-# ------------------------------ RUN ------------------------------ #
-.PHONY: run run-entry
+pull-cloud:
+	$(rclone) $(rcloneflags) copy --update --progress \
+	$(rclone_gdrive)/$(app_name) $(appdir)/cloud
 
-run: file ?= $(ENTRY_POINT)
-run: mode ?= 'development'
+push-cloud:
+	$(rclone) $(rcloneflags) copy --update --progress \
+	$(appdir)/cloud $(rclone_gdrive)/$(app_name)
+
+# Run
 run:
-	$(INTERPRETER) $(file)
 
-run-entry: mode ?= 'development'
-run-entry:
-	$(INTERPRETER) $(ENTRY_POINT)
+# Scratch
+scratch:
 
-# ------------------------------ CLEAN ------------------------------ #
-.PHONY: clean distclean
+# Develop
+dev:
 
-clean:
+# Build
+build:
 
-distclean:
+# Develop
+dev:
 
-# ------------------------------ ENV ------------------------------ #
-.PHONY: env env-dry
-mode ?= production
-envars ?= ""
+# Release
+release: distribution:=$(appdir_abs)
+release: metafiles:=$(addprefix $(appdir_abs)/,$(metafiles))
+release:
 
-env:
-	$(DOTENV) --mode=$(mode) --environment=$(ENVARS)$(envars) \
-	| $(SORT) > $(PKGDIR)/.env
+# Publish release
+publish:
+
+# Deploy
+deploy:
+
+# Distribute binary release
+package: dist_target:=bin
+package: dist_basename:=$(distbin_basename)
+package: distribution:=$(distbin)
+package: $(distbin).$$(archive)
+$(distbin).tar.gz: $(distbin)
+	tar --dereference --create --file=- $(distbin) \
+	| gzip --to-stdout --best - > $(distbin).tar.gz
+$(distbin).zip: $(distbin)
+	zip -r - $(distbin) > $(distbin).zip
+$(distbin): metafiles:=$(addprefix $(distbin)/, $(metafiles))
+$(distbin): build mkdistdir $$(metafiles)
+
+# Distribute source release
+dist: dist_target:=src
+dist: dist_basename:=$(distsrc_basename)
+dist: distribution:=$(distsrc)
+dist: $(distsrc).$$(archive)
+$(distsrc).tar.gz: $(distsrc)
+	@echo make $@
+	tar --dereference --create --file=- $(distsrc) \
+	| gzip --to-stdout --best - > $(distsrc).tar.gz
+$(distsrc).zip: $(distsrc)
+	@echo make $@
+	zip -r - $(distsrc) > $(distsrc).zip
+$(distsrc): metafiles:=$(addprefix $(distsrc)/, $(metafiles))
+$(distsrc): mkdistdir $$(metafiles)
+
+mkdistdir:
+	-rm -rdf $(distribution)
+	mkdir $(distribution)
+
+%/$(releasefile):
+	@echo make $@
+	cat<<EOF > $@
+	VERSION=$(app_version)
+	DIST_TARGET=$(dist_target)
+	DIST_NAME=$(dist_basename)
+	DISTRIBUTER=$(git_author) <$(git_author_email)> $(user)@$(hostname)
+	BRANCH=$(git_branch)
+	COMMIT=$(git_commit)
+	STATUS=$(git_status)
+	DATE=$(date)
+	EOF
+
+%/$(changelogfile):
+	@echo make $@
+	cat<<EOF > $@
+	changelogfile
+	EOF
+
+%/$(readmefile):
+	@echo make $@
+	cat<<EOF > $@
+	readmefile
+	EOF
+
+env: $(dotenvdirs)
+	$(dotenv) $(dotenvflags) $(dotenvdirs) | $(sort) > $(dotenvfile)
 
 env-dry:
-	$(DOTENV) --mode=$(mode) --environment=$(envars) \
-	| $(SORT)
+	$(dotenv) $(dotenvflags) $(dotenvdirs) | $(sort)
 
-# ------------------------------ HELP ------------------------------ #
-.PHONY: help
+clean:
+	-rm -rdf $(buildir)
+	-rm -rdf *.tar.gz
+	-rm -rdf $(app_name)-v*
+	-rm *.log
 
 help:
-	@cat $(PKGDIR)/Makefile | grep -i --color=auto 'phony'
+	@cat ./Makefile | grep -i --color=auto 'phony' | cut -d ' ' -f2- | tail --lines=+3
 
+.PHONY: help
+# General setup of the repository
+.PHONY: all /* build application */
+.PHONY: pull-cloud /* download google_drive/app_name/* to ./cloud */
+.PHONY: push-cloud /* upload ./cloud/* to google_drive/app_name */
+# Software development
+.PHONY: dev /* develop application*/
+.PHONY: run /* read dotenvfile and run any file */
+.PHONY: scratch /* read dotenvfile and run the scratch file */
+.PHONY: env /* write environment into .env */
+.PHONY: env-dry /* print environment */
+# Software distribution
+.PHONY: build /* build application */
+.PHONY: release /* release a new application version */
+.PHONY: publish /* publish current release to a cloud VCS */
+.PHONY: package /* package a new built and metadata into a form suitable for distribution */
+.PHONY: dist /* package the source repo and metadata into a form suitable for distribution */
+.PHONY: deploy /* deploy the application to the consumer, such as a server */
+# Cleaning
+.PHONY: clean /* Remove files created by make build, install, package, dist... */
+.PHONY: distclean /* Remove files created by configure */
