@@ -44,15 +44,13 @@ filenames() {
     export TARGET_DIRNAME=
     export TARGET_PATH=
 
-    if (( $# == 2)); then
-        TARGET_BASENAME="$1"
-        TARGET_DIRNAME="$2"
-    elif (( $# == 1)); then
-        TARGET_DIRNAME="$1"
+    if [ "${DEFAULT_NAME:-}" ]; then
+        TARGET_BASENAME=$DEFAULT_NAME
+    else
+        TARGET_BASENAME=$1
     fi
-
-    TARGET_BASENAME="${TARGET_BASENAME:-$DEFAULT_NAME}"
-
+    TARGET_DIRNAME="${2:-.}"
+    
     PROCDIR="${PROCDIR:-$(pwd)}"
     ifdef(`__DEBUG__`, `TARGET_DIRNAME=${CRAPPTEMPDIR}`)
     TARGET_DIRNAME="${TARGET_DIRNAME:-$PROCDIR}"

@@ -2,6 +2,7 @@ declare -a subargs=()
 declare -a subs=(
     # languages
     js
+    bash
     # tools
     makefile
     readme

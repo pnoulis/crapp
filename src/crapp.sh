@@ -41,7 +41,7 @@ crapp() {
     source ${TEMPLATESDIR}/${subargs[0]}.sh "${subargs[@]:1}"
     [ $DEBUG ] && {
         echo '------------------------------'
-        find $TARGET_DIRNAME -mindepth 1
+        # find $TARGET_DIRNAME -mindepth 1
         echo '------------------------------'
     }
     echo ${subargs[0]} $TARGET_PATH

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+mkdir -p $TARGET_PATH
+pushd ${TARGET_PATH} >/dev/null
+# Need a directory tree
+$CRAPP --tmpkeep dirs --gitkeep --template base $TARGET_BASENAME ../
+# Need a README file
+$CRAPP --tmpkeep readme --template base .
+
